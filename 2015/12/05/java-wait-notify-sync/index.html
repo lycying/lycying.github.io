@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>java 为什么wait(),notify(),notifyAll()必须在同步方法/代码块中调用？ | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="在Java中，所有对象都能够被作为”监视器monitor“——指一个拥有一个独占锁，一个入口队列和一个等待队列的实体entity。所有对象的非同步方法都能够在任意时刻被任意线程调用，此时不需要考虑加锁的问题。而对于对象的同步方法来说，在任意时刻有且仅有一个拥有该对象独占锁的线程能够调用它们。例如，一个同步方法是独占的。如果在线程调用某一对象的同步方法时，对象的独占锁被其他线程拥有，那么当前线程将处">
+<meta name="keywords" content="thread,object">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java 为什么wait(),notify(),notifyAll()必须在同步方法&#x2F;代码块中调用？">
+<meta property="og:url" content="http://java.jr-jr.com/2015/12/05/java-wait-notify-sync/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="在Java中，所有对象都能够被作为”监视器monitor“——指一个拥有一个独占锁，一个入口队列和一个等待队列的实体entity。所有对象的非同步方法都能够在任意时刻被任意线程调用，此时不需要考虑加锁的问题。而对于对象的同步方法来说，在任意时刻有且仅有一个拥有该对象独占锁的线程能够调用它们。例如，一个同步方法是独占的。如果在线程调用某一对象的同步方法时，对象的独占锁被其他线程拥有，那么当前线程将处">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.874Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="java 为什么wait(),notify(),notifyAll()必须在同步方法&#x2F;代码块中调用？">
+<meta name="twitter:description" content="在Java中，所有对象都能够被作为”监视器monitor“——指一个拥有一个独占锁，一个入口队列和一个等待队列的实体entity。所有对象的非同步方法都能够在任意时刻被任意线程调用，此时不需要考虑加锁的问题。而对于对象的同步方法来说，在任意时刻有且仅有一个拥有该对象独占锁的线程能够调用它们。例如，一个同步方法是独占的。如果在线程调用某一对象的同步方法时，对象的独占锁被其他线程拥有，那么当前线程将处">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-java-wait-notify-sync" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      java 为什么wait(),notify(),notifyAll()必须在同步方法/代码块中调用？
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2015/12/05/java-wait-notify-sync/" class="article-date"><time datetime="2015-12-05T09:29:10.000Z" itemprop="datePublished">2015-12-05</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/初级/">初级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        
+        <p>在Java中，所有对象都能够被作为”监视器<code>monitor</code>“——指一个拥有<code>一个独占锁</code>，<code>一个入口队列</code>和<code>一个等待队列</code>的实体entity。所有对象的非同步方法都能够在任意时刻被任意线程调用，此时不需要考虑加锁的问题。而对于对象的同步方法来说，在任意时刻有且仅有一个拥有该对象独占锁的线程能够调用它们。例如，一个同步方法是独占的。如果在线程调用某一对象的同步方法时，对象的独占锁被其他线程拥有，那么当前线程将处于阻塞状态，并添加到对象的入口队列中。</p>
+<p>只有在调用线程拥有某个对象的独占锁时，才能够调用该对象的wait(),notify()和notifyAll()方法。这一点通常不会被程序员注意，因为程序验证通常是在对象的同步方法或同步代码块中调用它们的。如果尝试在未获取对象锁时调用这三个方法，那么你将得到一个<code>java.lang.IllegalMonitorStateException:current thread not owner</code>。</p>
+<p>当一个线程正在某一个对象的同步方法中运行时调用了这个对象的wait方法，那么这个线程将释放该对象的独占锁并被放入这个对象的等待队列。注意，wait()方法强制当前线程释放对象锁。这意味着<strong>在调用某对象的wait()方法之前，当前线程必须已经获得该对象的锁。</strong>因此，线程必须在某个对象的同步方法或同步代码块中才能调用该对象的wait()方法。</p>
+<p>当某线程调用某对象的notify()或notifyAll()方法时，任意一个(对于notify())或者所有(对于notifyAll())在该对象的等待队列中的线程，将被转移到该对象的入口队列。接着这些队列将竞争该对象的锁，最终获得锁的线程继续执行。如果没有线程在该对象的等待队列中等待获得锁，那么notify()和notifyAll()将不起任何作用。<strong>在调用对象的notify()和notifyAll()方法之前，调用线程必须已经得到该对象的锁。</strong>因此，必须在某个对象的同步方法或同步代码块中才能调用该对象的notify()或notifyAll()方法。</p>
+<p>对于处于某对象的等待队列中的线程，只有当其他线程调用此对象的notify()或notifyAll()方法时才有机会继续执行。</p>
+<p>调用wait()方法的原因通常是，调用线程希望某个特殊的状态(或变量)被设置之后再继续执行。调用notify()或notifyAll()方法的原因通常是，调用线程希望告诉其他等待中的线程:”特殊状态已经被设置”。这个状态作为线程间通信的通道，它必须是一个可变的共享状态(或变量)。</p>
+<p>例如，生产者线程向缓冲区中写入数据，消费者线程从缓冲区中读取数据。消费者线程需要等待直到生产者线程完成一次写入操作。生产者线程需要等待消费者线程完成一次读取操作。假设wait(),notify(),notifyAll()方法不需要加锁就能够被调用。此时消费者线程调用wait()正在进入状态变量的等待队列(译者注:可能还未进入)。在同一时刻，生产者线程调用notify()方法打算向消费者线程通知状态改变。那么此时消费者线程将错过这个通知并一直阻塞。因此，对象的wait(),notify(),notifyAll()方法必须在该对象的同步方法或同步代码块中被互斥地调用。</p>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/object/">object</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/thread/">thread</a></li></ul>
+
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2015/12/05/design-pattern/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">设计模式(Design Pattern)</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2015/12/07/tcp-ip-state/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">TCP/IP的各种状态</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2015/12/05/java-wait-notify-sync/" data-title="java 为什么wait(),notify(),notifyAll()必须在同步方法/代码块中调用？" data-url="http://java.jr-jr.com/2015/12/05/java-wait-notify-sync/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

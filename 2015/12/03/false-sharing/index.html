@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>false-sharing问题(Cache line引起) | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="简介什么叫Cache line CPU利用cache和内存之间交换数据的最小粒度不是字节，而是称为cacheline的一块固定大小的区域。CPU缓存是一种高效的非链式结构的hash map，每个桶（bucket）通常是64个字节。这就是一个“缓存行（cache line）”。缓存行是内存交换的实际单位。  查看wiki详细介绍 问题Avoiding and Identifying False Sh">
+<meta name="keywords" content="thread">
+<meta property="og:type" content="article">
+<meta property="og:title" content="false-sharing问题(Cache line引起)">
+<meta property="og:url" content="http://java.jr-jr.com/2015/12/03/false-sharing/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="简介什么叫Cache line CPU利用cache和内存之间交换数据的最小粒度不是字节，而是称为cacheline的一块固定大小的区域。CPU缓存是一种高效的非链式结构的hash map，每个桶（bucket）通常是64个字节。这就是一个“缓存行（cache line）”。缓存行是内存交换的实际单位。  查看wiki详细介绍 问题Avoiding and Identifying False Sh">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://java.jr-jr.com/false-sharing.gif">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.870Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="false-sharing问题(Cache line引起)">
+<meta name="twitter:description" content="简介什么叫Cache line CPU利用cache和内存之间交换数据的最小粒度不是字节，而是称为cacheline的一块固定大小的区域。CPU缓存是一种高效的非链式结构的hash map，每个桶（bucket）通常是64个字节。这就是一个“缓存行（cache line）”。缓存行是内存交换的实际单位。  查看wiki详细介绍 问题Avoiding and Identifying False Sh">
+<meta name="twitter:image" content="http://java.jr-jr.com/false-sharing.gif">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-false-sharing" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      false-sharing问题(Cache line引起)
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2015/12/03/false-sharing/" class="article-date"><time datetime="2015-12-03T04:03:43.000Z" itemprop="datePublished">2015-12-03</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/高级/">高级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#简介"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#什么叫Cache-line"><span class="toc-number">1.1.</span> <span class="toc-text">什么叫Cache line</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#问题"><span class="toc-number">2.</span> <span class="toc-text">问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#代码示例"><span class="toc-number">3.</span> <span class="toc-text">代码示例</span></a></li></ol>
+        <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><h4 id="什么叫Cache-line"><a href="#什么叫Cache-line" class="headerlink" title="什么叫Cache line"></a>什么叫Cache line</h4><blockquote>
+<p>CPU利用cache和内存之间交换数据的最小粒度不是字节，而是称为cacheline的一块固定大小的区域。CPU缓存是一种高效的非链式结构的hash map，每个桶（bucket）通常是64个字节。这就是一个“缓存行（cache line）”。缓存行是内存交换的实际单位。</p>
+</blockquote>
+<p><a href="https://en.wikipedia.org/wiki/CPU_cache#Cache_entry_structure" target="_blank" rel="noopener">查看wiki详细介绍</a></p>
+<h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p><a href="https://software.intel.com/en-us/articles/avoiding-and-identifying-false-sharing-among-threads/" target="_blank" rel="noopener">Avoiding and Identifying False Sharing Among Threads</a></p>
+<p>当多线程修改互相独立的变量时，如果这些变量共享同一个缓存行，就会无意中影响彼此的性能，这就是伪共享。在多处理器，多线程情况下，如果两个线程分别运行在不同的CPU上，而其中某个线程修改了cache line中的元素，由于cache一致性的原因，另一个线程的cache line被宣告无效，在下一次访问时会出现一次cache line miss。</p>
+<p>一句话，这是由于两个线程的<code>Cache line</code>有重合引起的。<br>如图:</p>
+<p><img src="/false-sharing.gif" alt=""></p>
+<p> 如图所示，thread1修改了memory灰化区域的第[2]个元素，而Thread0只需要读取灰化区域的第[1]个元素，由于这段memory被载入了各自CPU的硬件cache中，虽然在memory的角度这两种的访问时隔离的，但是由于错误的紧凑地放在了一起，而导致了，thread1的修改，在cache一致性的要求下，宣告了运行Thread0的CPU0的cache line非法，从而出现了一次miss，导致从小从memory中读取到cache line中，而一致性的代价付出了，但结果并不是thread0所care的，导致了效率的降低。</p>
+<p> 在Java程序中,数组的成员在缓存中也是连续的. 其实从Java对象的相邻成员变量也会加载到同一缓存行中. 如果多个线程操作不同的成员变量, 但是相同的缓存行, 伪共享(False Sharing)问题就发生了.</p>
+<h3 id="代码示例"><a href="#代码示例" class="headerlink" title="代码示例"></a>代码示例</h3><p><a href="http://mechanical-sympathy.blogspot.com/2011/07/false-sharing.html" target="_blank" rel="noopener">看一个测试例子</a></p>
+<p>注意这一行，使用了7个long来填充缓存行。<br><figure class="highlight smali"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">public<span class="built_in"> long </span>p1, p2, p3, p4, p5, p6, p7;</span><br></pre></td></tr></table></figure></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">FalseSharing</span></span></span><br><span class="line"><span class="class">    <span class="keyword">implements</span> <span class="title">Runnable</span></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">static</span> <span class="keyword">int</span> NUM_THREADS = <span class="number">4</span>; <span class="comment">// change</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">static</span> <span class="keyword">long</span> ITERATIONS = <span class="number">500L</span> * <span class="number">1000L</span> * <span class="number">1000L</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> arrayIndex;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> VolatileLong[] longs = <span class="keyword">new</span> VolatileLong[NUM_THREADS];</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; longs.length; i++) &#123;</span><br><span class="line">            longs[i] = <span class="keyword">new</span> VolatileLong();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">FalseSharing</span><span class="params">(<span class="keyword">final</span> <span class="keyword">int</span> arrayIndex)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.arrayIndex = arrayIndex;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(<span class="keyword">final</span> String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">long</span> start = System.nanoTime();</span><br><span class="line">        runTest();</span><br><span class="line">        System.out.println(<span class="string">"duration = "</span> + (System.nanoTime() - start));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">runTest</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        Thread[] threads = <span class="keyword">new</span> Thread[NUM_THREADS];</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; threads.length; i++) &#123;</span><br><span class="line">            threads[i] = <span class="keyword">new</span> Thread(<span class="keyword">new</span> FalseSharing(i));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (Thread t : threads) &#123;</span><br><span class="line">            t.start();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (Thread t : threads) &#123;</span><br><span class="line">            t.join();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">long</span> i = ITERATIONS + <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">while</span> (<span class="number">0</span> != --i) &#123;</span><br><span class="line">            longs[arrayIndex].value = i;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">VolatileLong</span> </span>&#123;</span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">volatile</span> <span class="keyword">long</span> value = <span class="number">0L</span>;</span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">long</span> p1, p2, p3, p4, p5, p6, p7; <span class="comment">// comment out</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>高性能无锁队列<a href="http://lmax-exchange.github.io/disruptor/" target="_blank" rel="noopener">Disruptor</a> 的<a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/RingBuffer.java" target="_blank" rel="noopener">RingBuffer.java (查看源码)</a> 就使用了这种对齐方式。</p>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/thread/">thread</a></li></ul>
+
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2015/12/02/java-object-size/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">java Object类占用内存大小计算</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2015/12/03/java-cms/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">CMS(Concurrent Mark-Sweep)垃圾回收器</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2015/12/03/false-sharing/" data-title="false-sharing问题(Cache line引起)" data-url="http://java.jr-jr.com/2015/12/03/false-sharing/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

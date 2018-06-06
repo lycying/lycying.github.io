@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>IO NIO的一些概念 | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="NIO，New IO，又叫做Non-blocking IO，Netty线程里用的New I/O worker #*  概念IO 性能对于一个系统的影响是至关重要的。一个系统经过多项优化以后，瓶颈往往落在数据库；而数据库经过多种优化以后，瓶颈最终会落到 IO 。而IO 性能的发展，明显落后于CPU的发展。Redis也好，NoSql也好，这些流行技术的背后都在直接或者间接地回避IO瓶颈，从而提高系统性">
+<meta name="keywords" content="net,io">
+<meta property="og:type" content="article">
+<meta property="og:title" content="IO NIO的一些概念">
+<meta property="og:url" content="http://java.jr-jr.com/2015/12/10/io-nio/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="NIO，New IO，又叫做Non-blocking IO，Netty线程里用的New I/O worker #*  概念IO 性能对于一个系统的影响是至关重要的。一个系统经过多项优化以后，瓶颈往往落在数据库；而数据库经过多种优化以后，瓶颈最终会落到 IO 。而IO 性能的发展，明显落后于CPU的发展。Redis也好，NoSql也好，这些流行技术的背后都在直接或者间接地回避IO瓶颈，从而提高系统性">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://java.jr-jr.com/reactor.jpg">
+<meta property="og:image" content="http://java.jr-jr.com/io-nio-all.png">
+<meta property="og:image" content="http://java.jr-jr.com/io-nio-block.png">
+<meta property="og:image" content="http://java.jr-jr.com/io-nio-nonblocking.png">
+<meta property="og:image" content="http://java.jr-jr.com/io-nio-muti.png">
+<meta property="og:image" content="http://java.jr-jr.com/io-nio-signal.png">
+<meta property="og:image" content="http://java.jr-jr.com/io-nio-aio.png">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.871Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="IO NIO的一些概念">
+<meta name="twitter:description" content="NIO，New IO，又叫做Non-blocking IO，Netty线程里用的New I/O worker #*  概念IO 性能对于一个系统的影响是至关重要的。一个系统经过多项优化以后，瓶颈往往落在数据库；而数据库经过多种优化以后，瓶颈最终会落到 IO 。而IO 性能的发展，明显落后于CPU的发展。Redis也好，NoSql也好，这些流行技术的背后都在直接或者间接地回避IO瓶颈，从而提高系统性">
+<meta name="twitter:image" content="http://java.jr-jr.com/reactor.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-io-nio" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      IO NIO的一些概念
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2015/12/10/io-nio/" class="article-date"><time datetime="2015-12-10T07:05:52.000Z" itemprop="datePublished">2015-12-10</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/中级/">中级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#概念"><span class="toc-number">1.</span> <span class="toc-text">概念</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Reactor"><span class="toc-number">1.1.</span> <span class="toc-text">Reactor</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#NIO和BIO的区别"><span class="toc-number">1.2.</span> <span class="toc-text">NIO和BIO的区别</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Linux-IO模型"><span class="toc-number">2.</span> <span class="toc-text">Linux IO模型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#阻塞IO模型"><span class="toc-number">2.1.</span> <span class="toc-text">阻塞IO模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#非阻塞IO模型"><span class="toc-number">2.2.</span> <span class="toc-text">非阻塞IO模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#多路复用"><span class="toc-number">2.3.</span> <span class="toc-text">多路复用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#信号驱动IO模型"><span class="toc-number">2.4.</span> <span class="toc-text">信号驱动IO模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#异步IO模型"><span class="toc-number">2.5.</span> <span class="toc-text">异步IO模型</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#epoll"><span class="toc-number">3.</span> <span class="toc-text">epoll</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Zero-Copy"><span class="toc-number">4.</span> <span class="toc-text">Zero Copy</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#C10K-问题"><span class="toc-number">5.</span> <span class="toc-text">C10K 问题</span></a></li></ol>
+        <div class="tip"><br>NIO，New IO，又叫做Non-blocking IO，Netty线程里用的<code>New I/O worker #*</code><br></div>
+
+<h3 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h3><p>IO 性能对于一个系统的影响是至关重要的。一个系统经过多项优化以后，瓶颈往往落在数据库；而数据库经过多种优化以后，瓶颈最终会落到 IO 。而IO 性能的发展，明显落后于CPU的发展。Redis也好，NoSql也好，这些流行技术的背后都在直接或者间接地回避IO瓶颈，从而提高系统性能。</p>
+<p>我们说阻塞和非阻塞时,要区分场合范围,比如 Linux中说的非阻塞I/O和Java的NIO1.0中的非阻塞I/O不是相同的概念. 从最根本来说, 阻塞就是进程”被”休息,CPU处理其它进程去了.非阻塞可以理解成: 将大的整片时间的阻塞分成N多的小的阻塞,所以进程不断地有机会 “被” CPU光顾, 理论上可以做点其它事.看上去 Linux非阻塞I/O要比阻塞好,但CPU会很大机率﻿因socket没数据﻿而空转.虽然这个进程是爽了, 但是从整个机器的效率来说, 浪费更大了!Java NIO1.0中的非阻塞I/O中的 Selector.select()函数还是阻塞的, 所以不会有无谓的CPU浪费.</p>
+<h4 id="Reactor"><a href="#Reactor" class="headerlink" title="Reactor"></a>Reactor</h4><p>IO分为两个阶段：</p>
+<ul>
+<li>资源等待阶段</li>
+<li>资源使用阶段</li>
+</ul>
+<p>Java NIO解决的是资源等待阶段阶段的问题。资源使用阶段，依然是在用户线程中去完成的。Java NIO使用的是Reactor模型：<br><img src="/reactor.jpg" alt=""></p>
+<p>Reactor有很多种变种，<a href="http://blog.csdn.net/heyutao007/article/details/45626235" target="_blank" rel="noopener">深入了解</a></p>
+<p>Reactor多线程模型的特点：</p>
+<ul>
+<li>有专门一个NIO线程<code>Acceptor线程</code>用于监听服务端，接收客户端的TCP连接请求；</li>
+<li>网络IO操作-读、写等由一个NIO线程池负责，线程池可以采用标准的JDK线程池实现，它包含一个任务队列和N个可用的线程，由这些NIO线程负责消息的读取、解码、编码和发送；</li>
+<li>1个NIO线程可以同时处理N条链路，但是1个链路只对应1个NIO线程，防止发生并发操作问题。</li>
+</ul>
+<h4 id="NIO和BIO的区别"><a href="#NIO和BIO的区别" class="headerlink" title="NIO和BIO的区别"></a>NIO和BIO的区别</h4><ul>
+<li>阻塞IO：使用简单，但随之而来的问题就是会形成阻塞，需要独立线程配合，而这些线程在大多数时候都是没有进行运算的。Java的BIO使用这种方式，问题带来的问题很明显，一个Socket需要一个独立的线程，因此，会造成线程膨胀。</li>
+<li>非阻塞IO：采用轮询方式，不会形成线程的阻塞。Java的NIO使用这种方式，对比BIO的优势很明显，可以使用一个线程进行所有Socket的监听（select）。大大减少了线程数。</li>
+</ul>
+<p>下面我们看一下Linux 5种经典的IO模型。然后我们会发现，Java的NIO，其实只是多路复用而已。</p>
+<h3 id="Linux-IO模型"><a href="#Linux-IO模型" class="headerlink" title="Linux IO模型"></a>Linux IO模型</h3><p>linux下有五种常见的IO模型，其中只有一种异步模型，其余皆为同步模型。如图：<br><img src="/io-nio-all.png" alt=""></p>
+<h4 id="阻塞IO模型"><a href="#阻塞IO模型" class="headerlink" title="阻塞IO模型"></a>阻塞IO模型</h4><p>阻塞IO模型是最常见的IO模型了，对于所有的“慢速设备”（<code>socket</code>、<code>pipe</code>、<code>fifo</code>、<code>terminal</code>）的IO默认的方式都是阻塞的方式。阻塞就是进程放弃cpu，让给其他进程使用cpu。进程阻塞最显著的表现就是<code>进程睡眠了</code>。阻塞的时间通常取决于<code>数据</code>是否到来。<br>这种方式使用简单，但随之而来的问题就是会形成阻塞，需要独立线程配合，而这些线程在大多数时候都是没有进行运算的。Java的BIO使用这种方式，问题带来的问题很明显，一个Socket需要一个独立的线程，因此，会<code>造成线程膨胀</code>。<br><img src="/io-nio-block.png" alt=""></p>
+<h4 id="非阻塞IO模型"><a href="#非阻塞IO模型" class="headerlink" title="非阻塞IO模型"></a>非阻塞IO模型</h4><p>非阻塞IO就是设置IO相关的系统调用为<code>non-blocking</code>，随后进行的IO操作无论有没有可用数据都会立即返回，并设置errno为<code>EWOULDBLOCK</code>或者<code>EAGAIN</code>。我们可以通过主动check的方式（polling，轮询）确保IO有效时，随之进行相关的IO操作。当然这种方式看起来就似乎不太靠谱，浪费了太多的CPU时间，用宝贵的CPU时间做轮询太不靠谱儿了。图示：<br><img src="/io-nio-nonblocking.png" alt=""></p>
+<h4 id="多路复用"><a href="#多路复用" class="headerlink" title="多路复用"></a>多路复用</h4><p>为了解决阻塞I/O的问题,就有了I/O多路复用模型,多路复用就是用<code>单独的线程(是内核级的, 可以认为是高效的优化的)</code> 来统一等待所有的socket上的数据, 一当某个socket上有数据后, 就启用用户线程(可能是从线程池中取出, 而不是重新生成), <code>copy socket data</code>, 并且处理message.因为网络延迟的原因, 同时在处理<code>socket data</code>的用户线程往往比实际的socket数量要少很多. 所以实际应用中, 大部分是用线程池, 池中thread数量可随socket的高峰和低谷 而动态调整.</p>
+<p>多路复用I/O中内核中统一﻿的<code>wait socket data</code>那部分可以理解成是<code>非阻塞</code>, 也可以理解成<code>阻塞</code>. 可以理解成<code>非阻塞</code> 是因为它不是等到socket数据全部到达再处理, 而是有了一部分数据就会调用用户线程来处理, 理解成<code>阻塞</code>, 是因为它和用户空间(Appliction)层的<code>非阻塞</code>﻿socket的不同是: socket中没有数据时, 内核还是wait(阻塞)的, 而用户空间的非阻塞﻿socket没有数据也会返回, 会造成CPU的浪费.</p>
+<p>Linux下的select和poll 就是多路复用模式,poll相对select,没有了句柄数的限制,但他们都是在内核层通过轮询socket句柄的方式来实现的, 没有利用更底层的notify机制. 但就算是这样,相对阻塞socket也已经﻿进步了很多很多了! 毕竟用一个内核线程就解决了,阻塞socket中N多线程都在无谓地wait的局面.</p>
+<p><div class="tip"><br>多路复用I/O﻿ 还是让用户层来<code>copy socket data</code>. 这个过程是将内核中的<code>socket buffer copy</code>到用户空间的 buffer. 这有两个问题: 一是多了一次内核空间switch到用户空间的过程, 二是用户空间层不便暴露很低层但很高效的copy方式(比如DMA), 所以如果由内核层来做这个动作, 可以更好地提高效率!<br></div><br><img src="/io-nio-muti.png" alt=""></p>
+<h4 id="信号驱动IO模型"><a href="#信号驱动IO模型" class="headerlink" title="信号驱动IO模型"></a>信号驱动IO模型</h4><p>所谓信号驱动，就是利用信号机制，安装信号SIGIO的处理函数（进行IO相关操作），通过监控文件描述符，当其就绪时，通知目标进程进行IO操作（signal handler）。<br><img src="/io-nio-signal.png" alt=""></p>
+<h4 id="异步IO模型"><a href="#异步IO模型" class="headerlink" title="异步IO模型"></a>异步IO模型</h4><p>由于异步IO请求只是写入了缓存，从缓存到硬盘是否成功不可知，因此异步IO相当于把一个IO拆成了两部分，一是发起请求，二是获取处理结果。因此，对应用来说增加了复杂性。但是异步IO的性能是所有很好的，而且异步的思想贯穿了IT系统放放面面。<br><img src="/io-nio-aio.png" alt=""></p>
+<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><p>epoll是Java NIO在linux上的默认实现。相关的工具可以关注<code>select</code>,<code>poll</code>，关于三者间的区别，<a href="http://www.cnblogs.com/Anker/p/3265058.html" target="_blank" rel="noopener">参见这里</a>。在Mac上类似的实现是<code>kqueue</code>,Solaris上是<code>/dev/poll</code>。<br>epoll的优点</p>
+<ul>
+<li>支持一个进程打开大数目的socket描述符(FD)</li>
+<li><p>IO效率不随FD数目增加而线性下降</p>
+<blockquote>
+<p>传统的select/poll另一个致命弱点就是当你拥有一个很大的socket集合，不过由于网络延时，任一时间只有部分的socket是”活跃”的，但是select/poll每次调用都会线性扫描全部的集合，导致效率呈现线性下降。但是epoll不存在这个问题，它只会对”活跃”的socket进行操作—这是因为在内核实现中epoll是根据每个fd上面的callback函数实现的。那么，只有”活跃”的socket才会主动的去调用 callback函数，其他idle状态socket则不会，在这点上，epoll实现了一个”伪”AIO，因为这时候推动力在os内核。</p>
+</blockquote>
+</li>
+<li><p>使用mmap加速内核与用户空间的消息传递。</p>
+</li>
+<li>内核微调</li>
+</ul>
+<p>epoll有2种工作方式:LT和ET:</p>
+<ul>
+<li>LT(level triggered)是缺省的工作方式，并且同时支持block和no-block socket.在这种做法中，内核告诉你一个文件描述符是否就绪了，然后你可以对这个就绪的fd进行IO操作。如果你不作任何操作，内核还是会继续通知你的，所以，这种模式编程出错误可能性要小一点。传统的select/poll都是这种模型的代表．</li>
+<li>ET (edge-triggered)是高速工作方式，只支持no-block socket。在这种模式下，当描述符从未就绪变为就绪时，内核通过epoll告诉你。然后它会假设你知道文件描述符已经就绪，并且不会再为那个文件描述符发送更多的就绪通知，直到你做了某些操作导致那个文件描述符不再为就绪状态了(比如，你在发送，接收或者接收请求，或者发送接收的数据少于一定量时导致了一个EWOULDBLOCK 错误）。但是请注意，如果一直不对这个fd作IO操作(从而导致它再次变成未就绪)，内核不会发送更多的通知(only once),不过在TCP协议中，ET模式的加速效用仍需要更多的benchmark确认。</li>
+</ul>
+<h3 id="Zero-Copy"><a href="#Zero-Copy" class="headerlink" title="Zero Copy"></a>Zero Copy</h3><p>上面多次提到内核空间和用户空间的<code>switch</code>, 在<code>socket read/write</code>这么小的粒度频繁调用, 代价肯定是很大的.<br>所以可以在网上看到<code>Zero Copy</code>的技术, 说到底<code>Zero Copy</code>的思路就是: 分析你的业务, 看看是否能避免不必要的跨空间copy,比如可以用 sendfile()函数充分利用内核可以调用DMA的优势, 直接在内核空间将文件的内容通过socket发送出去,而不必经过用户空间.显然,sendfile是有很多的前提条件的, 如果你想让文件内容作一些变换再发出去,就必须要经过用户空间的<code>Appliation logic</code>, 也是无法使用sendfile了.还有一种方式就是象epoll所做的,用内存映射. 据我所知，kafka速度快的一个原因就是使用了<code>零拷贝</code>。<br>关于零拷贝，可以看<a href="http://my.oschina.net/cloudcoder/blog/299944" target="_blank" rel="noopener">这篇文章</a></p>
+<h3 id="C10K-问题"><a href="#C10K-问题" class="headerlink" title="C10K 问题"></a>C10K 问题</h3><p>网络服务在处理数以万计的客户端连接时,往往出现效率低下甚至完全瘫痪,这被 称为C10K问题。随着互联网的迅速发展,越来越多的网络服务开始面临 C10K 问题, 作为大型网站的开发人员有必要对C10K问题有一定的了解。<br>C10K问题的最大特点是:设计不够良好的程序,其性能和连接数及机器性能的关系往往是非线性的。举个例子:如果没有考虑过C10K问题,一个经典的基于<code>select</code>的程序能在旧服务器上很好处理<code>1000</code>并发的吞吐量,它在2倍性能新服务器上往往处理不了并发<code>2000</code>的吞吐量。<br>这是因为在策略不当时,大量操作的消耗和当前连接数n成线性相关。会导致单个任务的资源消耗和当前连接数的关系会是O(n)。而服务程序需要同时对数以万计的socket进行I/O处理,积累下来的资源消耗会相当可观,这显然会导致系统吞吐量不能 和机器性能匹配。为解决这个问题,必须改变对连接提供服务的策略。<br>更详细的资料参考：<a href="http://www.kegel.com/c10k.html" target="_blank" rel="noopener">The C10K problem </a></p>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/io/">io</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/net/">net</a></li></ul>
+
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2015/12/10/java-reentrant-lock/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">java内置锁的可重入性</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2015/12/31/redis-vvv/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">妈妈再也不用担心别人问我是否真正用过redis了</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2015/12/10/io-nio/" data-title="IO NIO的一些概念" data-url="http://java.jr-jr.com/2015/12/10/io-nio/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

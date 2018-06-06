@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>java初级：网络 | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="解释下Servlet的生命周期。 对每一个客户端的请求，Servlet引擎载入Servlet，调用它的init()方法，完成Servlet的初始化。然后，Servlet对象通过为每一个请求单独调用service()方法来处理所有随后来自客户端的请求，最后，调用Servlet(译者注：这里应该是Servlet而不是server)的destroy()方法把Servlet删除掉。  doGet()方法和">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java初级：网络">
+<meta property="og:url" content="http://java.jr-jr.com/2015/12/01/level1-network/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="解释下Servlet的生命周期。 对每一个客户端的请求，Servlet引擎载入Servlet，调用它的init()方法，完成Servlet的初始化。然后，Servlet对象通过为每一个请求单独调用service()方法来处理所有随后来自客户端的请求，最后，调用Servlet(译者注：这里应该是Servlet而不是server)的destroy()方法把Servlet删除掉。  doGet()方法和">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.875Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="java初级：网络">
+<meta name="twitter:description" content="解释下Servlet的生命周期。 对每一个客户端的请求，Servlet引擎载入Servlet，调用它的init()方法，完成Servlet的初始化。然后，Servlet对象通过为每一个请求单独调用service()方法来处理所有随后来自客户端的请求，最后，调用Servlet(译者注：这里应该是Servlet而不是server)的destroy()方法把Servlet删除掉。  doGet()方法和">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-level1-network" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      java初级：网络
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2015/12/01/level1-network/" class="article-date"><time datetime="2015-12-01T04:02:40.000Z" itemprop="datePublished">2015-12-01</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/初级/">初级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#解释下Servlet的生命周期。"><span class="toc-number">1.</span> <span class="toc-text">解释下Servlet的生命周期。</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#doGet-方法和doPost-方法有什么区别？"><span class="toc-number">2.</span> <span class="toc-text">doGet()方法和doPost()方法有什么区别？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#如何知道是哪一个客户端的机器正在请求你的Servlet？"><span class="toc-number">3.</span> <span class="toc-text">如何知道是哪一个客户端的机器正在请求你的Servlet？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#forward-和-redirect-的区别"><span class="toc-number">4.</span> <span class="toc-text">forward 和 redirect 的区别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HTTP响应的结构是怎么样的？"><span class="toc-number">5.</span> <span class="toc-text">HTTP响应的结构是怎么样的？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是cookie？session和cookie有什么区别？"><span class="toc-number">6.</span> <span class="toc-text">什么是cookie？session和cookie有什么区别？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TCP建立需要进行了几次握手？"><span class="toc-number">7.</span> <span class="toc-text">TCP建立需要进行了几次握手？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TCP关闭需要进行了几次握手？"><span class="toc-number">8.</span> <span class="toc-text">TCP关闭需要进行了几次握手？</span></a></li></ol>
+        <h3 id="解释下Servlet的生命周期。"><a href="#解释下Servlet的生命周期。" class="headerlink" title="解释下Servlet的生命周期。"></a>解释下Servlet的生命周期。</h3><blockquote>
+<p>对每一个客户端的请求，Servlet引擎载入Servlet，调用它的init()方法，完成Servlet的初始化。然后，Servlet对象通过为每一个请求单独调用service()方法来处理所有随后来自客户端的请求，最后，调用Servlet(译者注：这里应该是Servlet而不是server)的destroy()方法把Servlet删除掉。</p>
+</blockquote>
+<h3 id="doGet-方法和doPost-方法有什么区别？"><a href="#doGet-方法和doPost-方法有什么区别？" class="headerlink" title="doGet()方法和doPost()方法有什么区别？"></a>doGet()方法和doPost()方法有什么区别？</h3><blockquote>
+<p>doGet：GET方法会把名值对追加在请求的URL后面。因为URL对字符数目有限制，进而限制了用在客户端请求的参数值的数目。并且请求中的参数值是可见的，因此，敏感信息不能用这种方式传递。<br>doPOST：POST方法通过把请求参数值放在请求体中来克服GET方法的限制，因此，可以发送的参数的数目是没有限制的。最后，通过POST请求传递的敏感信息对外部客户端是不可见的。</p>
+</blockquote>
+<h3 id="如何知道是哪一个客户端的机器正在请求你的Servlet？"><a href="#如何知道是哪一个客户端的机器正在请求你的Servlet？" class="headerlink" title="如何知道是哪一个客户端的机器正在请求你的Servlet？"></a>如何知道是哪一个客户端的机器正在请求你的Servlet？</h3><blockquote>
+<p>ServletRequest类可以找出客户端机器的IP地址或者是主机名。getRemoteAddr()方法获取客户端主机的IP地址，getRemoteHost()可以获取主机名。</p>
+</blockquote>
+<h3 id="forward-和-redirect-的区别"><a href="#forward-和-redirect-的区别" class="headerlink" title="forward 和 redirect 的区别"></a>forward 和 redirect 的区别</h3><blockquote>
+<p>forward 是服务器请求资源,服务器直接访问目标地址的 URL,把那个 URL 的响应内容读取 过来,然后把这些内容再发给浏览器,浏览器根本不知道服务器发送的内容是从哪儿来的, 所以它的地址栏中还是原来的地址。<br>redirect 就是服务端根据逻辑,发送一个状态码,告诉浏览器重新去请求那个地址,一 般来说浏览器会用刚才请求的所有参数重新请求,所以 session,request 参数都可以获取。 20、EJB 与 JAVA BEAN 的区别?</p>
+</blockquote>
+<h3 id="HTTP响应的结构是怎么样的？"><a href="#HTTP响应的结构是怎么样的？" class="headerlink" title="HTTP响应的结构是怎么样的？"></a>HTTP响应的结构是怎么样的？</h3><blockquote>
+<p>HTTP响应由三个部分组成：<br><strong>状态码(Status Code)</strong>：描述了响应的状态。可以用来检查是否成功的完成了请求。请求失败的情况下，状态码可用来找出失败的原因。如果Servlet没有返回状态码，默认会返回成功的状态码HttpServletResponse.SC_OK。<br><strong>HTTP头部(HTTP Header)</strong>：它们包含了更多关于响应的信息。比如：头部可以指定认为响应过期的过期日期，或者是指定用来给用户安全的传输实体内容的编码格式。如何在Serlet中检索HTTP的头部看这里。<br><strong>主体(Body)</strong>：它包含了响应的内容。它可以包含HTML代码，图片，等等。主体是由传输在HTTP消息中紧跟在头部后面的数据字节组成的。</p>
+</blockquote>
+<h3 id="什么是cookie？session和cookie有什么区别？"><a href="#什么是cookie？session和cookie有什么区别？" class="headerlink" title="什么是cookie？session和cookie有什么区别？"></a>什么是cookie？session和cookie有什么区别？</h3><blockquote>
+<p>cookie是Web服务器发送给浏览器的一块信息。浏览器会在本地文件中给每一个Web服务器存储cookie。以后浏览器在给特定的Web服务器发请求的时候，同时会发送所有为该服务器存储的cookie。下面列出了session和cookie的区别：<br>无论客户端浏览器做怎么样的设置，session都应该能正常工作。客户端可以选择禁用cookie，但是，session仍然是能够工作的，因为客户端无法禁用服务端的session。<br>在存储的数据量方面session和cookies也是不一样的。session能够存储任意的Java对象，cookie只能存储String类型的对象。</p>
+</blockquote>
+<h3 id="TCP建立需要进行了几次握手？"><a href="#TCP建立需要进行了几次握手？" class="headerlink" title="TCP建立需要进行了几次握手？"></a>TCP建立需要进行了几次握手？</h3><blockquote>
+<p>在TCP/IP协议中，TCP协议提供可靠的连接服务，采用三次握手建立一个连接。 </p>
+<ul>
+<li>第一次握手：建立连接时，客户端发送syn包(syn=j)到服务器，并进入SYN_SEND状态，等待服务器确认； </li>
+<li>第二次握手：服务器收到syn包，必须确认客户的SYN（ack=j+1），同时自己也发送一个SYN包（syn=k），即SYN+ACK包，此时服务器进入SYN_RECV状态； </li>
+<li>第三次握手：客户端收到服务器的SYN＋ACK包，向服务器发送确认包ACK(ack=k+1)，此包发送完毕，客户端和服务器进入ESTABLISHED状态，完成三次握手。 完成三次握手，客户端与服务器开始传送数据.</li>
+</ul>
+</blockquote>
+<h3 id="TCP关闭需要进行了几次握手？"><a href="#TCP关闭需要进行了几次握手？" class="headerlink" title="TCP关闭需要进行了几次握手？"></a>TCP关闭需要进行了几次握手？</h3><blockquote>
+<p>四次。初始时客户端和服务端都处于ESTABLISHED状态。</p>
+<ul>
+<li>客户端先发送一个FIN包，告诉服务端他要断开连接。</li>
+<li>服务端收到FIN包后，给客户端发送一个确认包ACK，告诉应用程序他要关闭连接了。</li>
+<li>当应用程序准备好断开后，服务端给客户端发送FIN包。</li>
+<li>客户端收到服务端发来的FIN包后，给服务端发送ACK确认包。服务端收到之后就关闭连接。</li>
+</ul>
+</blockquote>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2015/12/01/level1-thread/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">java初级：多线程基础知识</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2015/12/01/level1-io/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">java初级：io</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2015/12/01/level1-network/" data-title="java初级：网络" data-url="http://java.jr-jr.com/2015/12/01/level1-network/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

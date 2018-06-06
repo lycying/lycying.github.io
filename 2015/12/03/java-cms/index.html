@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>CMS(Concurrent Mark-Sweep)垃圾回收器 | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="总体介绍CMS是以牺牲吞吐量为代价来获得最短回收停顿时间的垃圾回收器。对于要求服务器响应速度的应用上，这种垃圾回收器非常适合。在启动JVM参数加上-XX:+UseConcMarkSweepGC，这个参数表示对于老年代的回收采用CMS。CMS采用的基础算法是：标记—清除。在整个CMS的垃圾回收过程中，大部分是可以和用户的应用并发执行的，不需要暂停用户的应用。但是为了保证正确的运行，CMS仍旧需要少量">
+<meta name="keywords" content="jvm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CMS(Concurrent Mark-Sweep)垃圾回收器">
+<meta property="og:url" content="http://java.jr-jr.com/2015/12/03/java-cms/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="总体介绍CMS是以牺牲吞吐量为代价来获得最短回收停顿时间的垃圾回收器。对于要求服务器响应速度的应用上，这种垃圾回收器非常适合。在启动JVM参数加上-XX:+UseConcMarkSweepGC，这个参数表示对于老年代的回收采用CMS。CMS采用的基础算法是：标记—清除。在整个CMS的垃圾回收过程中，大部分是可以和用户的应用并发执行的，不需要暂停用户的应用。但是为了保证正确的运行，CMS仍旧需要少量">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.872Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="CMS(Concurrent Mark-Sweep)垃圾回收器">
+<meta name="twitter:description" content="总体介绍CMS是以牺牲吞吐量为代价来获得最短回收停顿时间的垃圾回收器。对于要求服务器响应速度的应用上，这种垃圾回收器非常适合。在启动JVM参数加上-XX:+UseConcMarkSweepGC，这个参数表示对于老年代的回收采用CMS。CMS采用的基础算法是：标记—清除。在整个CMS的垃圾回收过程中，大部分是可以和用户的应用并发执行的，不需要暂停用户的应用。但是为了保证正确的运行，CMS仍旧需要少量">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-java-cms" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      CMS(Concurrent Mark-Sweep)垃圾回收器
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2015/12/03/java-cms/" class="article-date"><time datetime="2015-12-03T09:36:33.000Z" itemprop="datePublished">2015-12-03</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/高级/">高级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#总体介绍"><span class="toc-number">1.</span> <span class="toc-text">总体介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CMS过程"><span class="toc-number">2.</span> <span class="toc-text">CMS过程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#初始标记"><span class="toc-number">2.1.</span> <span class="toc-text">初始标记</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#并发标记"><span class="toc-number">2.2.</span> <span class="toc-text">并发标记</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#并发预清理"><span class="toc-number">2.3.</span> <span class="toc-text">并发预清理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#重新标记"><span class="toc-number">2.4.</span> <span class="toc-text">重新标记</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#并发清理"><span class="toc-number">2.5.</span> <span class="toc-text">并发清理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#并发重置"><span class="toc-number">2.6.</span> <span class="toc-text">并发重置</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CMS缺点"><span class="toc-number">3.</span> <span class="toc-text">CMS缺点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#啥时候用CMS"><span class="toc-number">4.</span> <span class="toc-text">啥时候用CMS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CMS的全量GC"><span class="toc-number">5.</span> <span class="toc-text">CMS的全量GC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#永久代的回收"><span class="toc-number">6.</span> <span class="toc-text">永久代的回收</span></a></li></ol>
+        <h3 id="总体介绍"><a href="#总体介绍" class="headerlink" title="总体介绍"></a>总体介绍</h3><p>CMS是以<code>牺牲吞吐量</code>为代价来获得<code>最短回收停顿时间</code>的垃圾回收器。对于要求服务器响应速度的应用上，这种垃圾回收器非常适合。在启动JVM参数加上<code>-XX:+UseConcMarkSweepGC</code>，这个参数表示对于<code>老年代</code>的回收采用CMS。CMS采用的基础算法是：<code>标记—清除</code>。在整个CMS的垃圾回收过程中，大部分是可以和用户的应用并发执行的，不需要暂停用户的应用。但是为了保证正确的运行，CMS仍旧需要少量的<code>stop-the-world</code>暂停。所以当人别人问你CMS是否有<code>STW</code>问题时，不要回答没有。</p>
+<h3 id="CMS过程"><a href="#CMS过程" class="headerlink" title="CMS过程"></a>CMS过程</h3><ul>
+<li>初始标记(STW initial mark)</li>
+<li>并发标记(Concurrent marking)</li>
+<li>并发预清理(Concurrent precleaning)</li>
+<li>重新标记(STW remark)</li>
+<li>并发清理(Concurrent sweeping)</li>
+<li>并发重置(Concurrent reset)</li>
+</ul>
+<h4 id="初始标记"><a href="#初始标记" class="headerlink" title="初始标记"></a>初始标记</h4><p>在这个阶段，需要虚拟机停顿正在执行的任务，官方的叫法STW(Stop The Word)。这个过程从垃圾回收的”根对象”开始，只扫描到能够和”根对象”<code>直接关联</code>的对象，并作标记。所以这个过程虽然暂停了整个JVM，但是<code>很快就完成了</code>。</p>
+<h4 id="并发标记"><a href="#并发标记" class="headerlink" title="并发标记"></a>并发标记</h4><p>这个阶段紧随初始标记阶段，在初始标记的基础上继续<code>向下追溯</code>标记。并发标记阶段，应用程序的线程和并发标记的线程并发执行，所以用户不会感受到停顿。</p>
+<h4 id="并发预清理"><a href="#并发预清理" class="headerlink" title="并发预清理"></a>并发预清理</h4><p>并发预清理阶段仍然是并发的。在这个阶段，虚拟机查找在执行并发标记阶段新进入老年代的对象(可能会有一些对象从新生代晋升到老年代， 或者有一些对象被分配到老年代)。通过重新扫描，减少下一个阶段”重新标记”的工作，因为下一个阶段会Stop The World。</p>
+<h4 id="重新标记"><a href="#重新标记" class="headerlink" title="重新标记"></a>重新标记</h4><p>这个阶段会暂停虚拟机，收集器线程扫描在CMS堆中剩余的对象。扫描从”跟对象”开始向下追溯，并处理对象关联。</p>
+<h4 id="并发清理"><a href="#并发清理" class="headerlink" title="并发清理"></a>并发清理</h4><p>清理垃圾对象，这个阶段收集器线程和应用程序线程并发执行。</p>
+<h4 id="并发重置"><a href="#并发重置" class="headerlink" title="并发重置"></a>并发重置</h4><p>这个阶段，重置CMS收集器的数据结构，等待下一次垃圾回收。</p>
+<h3 id="CMS缺点"><a href="#CMS缺点" class="headerlink" title="CMS缺点"></a>CMS缺点</h3><ul>
+<li>CMS回收器采用的基础算法是<code>Mark-Sweep</code>。所有CMS不会整理、压缩堆空间。这样就会有一个问题：经过CMS收集的堆会<code>产生空间碎片</code>。 CMS不对堆空间整理压缩节约了垃圾回收的停顿时间，但也带来的堆空间的浪费。为了解决堆空间浪费问题，CMS回收器不再采用简单的指针指向一块可用堆空间来为下次对象分配使用。而是把一些未分配的空间汇总成一个列表，当JVM分配对象空间的时候，会搜索这个列表找到足够大的空间来hold住这个对象。</li>
+<li>需要更多的CPU资源。为了让应用程序不停顿，CMS线程和应用程序线程并发执行，这样就需要有更多的CPU，单纯靠线程切 换是不靠谱的。并且，重新标记阶段，为空保证STW快速完成，也要用到更多的甚至所有的CPU资源。</li>
+<li>CMS的另一个缺点是它需要更大的堆空间。因为CMS标记阶段应用程序的线程还是在执行的，那么就会有堆空间继续分配的情况，为了保证在CMS回 收完堆之前还有空间分配给正在运行的应用程序，必须预留一部分空间。也就是说，CMS不会在老年代满的时候才开始收集。相反，它会尝试更早的开始收集，已避免上面提到的情况：在回收完成之前，堆没有足够空间分配！默认当老年代使用68%的时候，CMS就开始行动了。 <code>– XX:CMSInitiatingOccupancyFraction=n</code>来设置这个阀值。总得来说，CMS回收器减少了回收的停顿时间，但是降低了堆空间的利用率。</li>
+</ul>
+<h3 id="啥时候用CMS"><a href="#啥时候用CMS" class="headerlink" title="啥时候用CMS"></a>啥时候用CMS</h3><p>如果你的应用程序对停顿比较敏感，并且在应用程序运行的时候可以提供更大的内存和更多的CPU(也就是硬件牛逼)，那么使用CMS来收集会给你带来好处。还有，如果在JVM中，有相对较多存活时间较长的对象(老年代比较大)会更适合使用CMS。</p>
+<blockquote>
+<p><strong>利用多核</strong><br>通过使用以下的选项，可以使得CMS充分利用多核：<br><code>-XX:+CMSConcurrentMTEnabled</code>  在并发阶段，可以利用多核<br><code>-XX:+ConcGCThreads</code> 指定线程数量<br><code>-XX:+ParallelGCThreads</code> 指定在stop-the-world过程中，垃圾回收的线程数，默认是cpu的个数<br><code>-XX:+UseParNewGC</code> 年轻代采用并行的垃圾回收器</p>
+</blockquote>
+<h3 id="CMS的全量GC"><a href="#CMS的全量GC" class="headerlink" title="CMS的全量GC"></a>CMS的全量GC</h3><p>如果CMS不能够在老年代清理出足够的空间，会导致异常，使得JVM临时启动<code>Serial Old</code>垃圾回收方式进行回收。这个会造成长时间的stop-the-world暂停。全量的GC的原因可能有两个：</p>
+<ul>
+<li>CMS垃圾回收的速度跟不上了</li>
+<li>老年代中有大量的内存碎片</li>
+<li>没有为JVM分配足够多的内存，从而导致OutofMemoryException。</li>
+</ul>
+<h3 id="永久代的回收"><a href="#永久代的回收" class="headerlink" title="永久代的回收"></a>永久代的回收</h3><p>默认情况下，CMS是不回收永久代中的垃圾的。如果在你的应用中使用了多个类加载器，或者反射机制，那么就需要对永久代进行回收。采用参数<code>-XX:+CMSClassUnloadingEnabled</code>会打开永久代的垃圾回收。</p>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/jvm/">jvm</a></li></ul>
+
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2015/12/03/false-sharing/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">false-sharing问题(Cache line引起)</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2015/12/03/crontab/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">调度系统，Crontab的格式</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2015/12/03/java-cms/" data-title="CMS(Concurrent Mark-Sweep)垃圾回收器" data-url="http://java.jr-jr.com/2015/12/03/java-cms/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

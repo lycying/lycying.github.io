@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>作为高级Java，你应该了解的Linux知识 | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="软件领域有两种人才，一种是工程型的，一种是研究型的。在Linux领域里，相对于搞内核研究的来说，搞命令行的就属于工程型。工程型也有他自己的苦衷，比如，背诵命令就挺痛苦的，一般来说不太推荐背诵，第一覆盖的面不广，第二记的快忘的也快，浪费脑细胞。牛逼的记法就是用，用时间来冲淡烟云，见微知著，并体验其中的喜悦。爱她并天天抱她上床，真爱才成。 Linux命令好像还真不少，根本原因就是软件多，也有像ag这样">
+<meta name="keywords" content="linux,shell">
+<meta property="og:type" content="article">
+<meta property="og:title" content="作为高级Java，你应该了解的Linux知识">
+<meta property="og:url" content="http://java.jr-jr.com/2016/06/04/linux-overview/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="软件领域有两种人才，一种是工程型的，一种是研究型的。在Linux领域里，相对于搞内核研究的来说，搞命令行的就属于工程型。工程型也有他自己的苦衷，比如，背诵命令就挺痛苦的，一般来说不太推荐背诵，第一覆盖的面不广，第二记的快忘的也快，浪费脑细胞。牛逼的记法就是用，用时间来冲淡烟云，见微知著，并体验其中的喜悦。爱她并天天抱她上床，真爱才成。 Linux命令好像还真不少，根本原因就是软件多，也有像ag这样">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://java.jr-jr.com/linux-4.png">
+<meta property="og:image" content="http://java.jr-jr.com/linux_2016-06-04_11-46-40.png">
+<meta property="og:image" content="http://java.jr-jr.com/linux_observability_tools.png">
+<meta property="og:image" content="http://java.jr-jr.com/xiuxiulian.jpg">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.881Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="作为高级Java，你应该了解的Linux知识">
+<meta name="twitter:description" content="软件领域有两种人才，一种是工程型的，一种是研究型的。在Linux领域里，相对于搞内核研究的来说，搞命令行的就属于工程型。工程型也有他自己的苦衷，比如，背诵命令就挺痛苦的，一般来说不太推荐背诵，第一覆盖的面不广，第二记的快忘的也快，浪费脑细胞。牛逼的记法就是用，用时间来冲淡烟云，见微知著，并体验其中的喜悦。爱她并天天抱她上床，真爱才成。 Linux命令好像还真不少，根本原因就是软件多，也有像ag这样">
+<meta name="twitter:image" content="http://java.jr-jr.com/linux-4.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-linux-overview" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      作为高级Java，你应该了解的Linux知识
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2016/06/04/linux-overview/" class="article-date"><time datetime="2016-06-04T04:19:57.000Z" itemprop="datePublished">2016-06-04</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/高级/">高级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#几种比较典型的Linux系统"><span class="toc-number">1.</span> <span class="toc-text">几种比较典型的Linux系统</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#首先要了解的概念"><span class="toc-number">1.1.</span> <span class="toc-text">首先要了解的概念</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四大元素"><span class="toc-number">2.</span> <span class="toc-text">四大元素</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#CPU"><span class="toc-number">2.1.</span> <span class="toc-text">CPU</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#内存"><span class="toc-number">2.2.</span> <span class="toc-text">内存</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#存储"><span class="toc-number">2.3.</span> <span class="toc-text">存储</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#网络"><span class="toc-number">2.4.</span> <span class="toc-text">网络</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#如何组织起来"><span class="toc-number">3.</span> <span class="toc-text">如何组织起来</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#一般排查问题的方法"><span class="toc-number">4.</span> <span class="toc-text">一般排查问题的方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#应用场景举例"><span class="toc-number">5.</span> <span class="toc-text">应用场景举例</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#怎么查看某个Java进程里面占用CPU最高的一个线程具体信息？"><span class="toc-number">5.1.</span> <span class="toc-text">怎么查看某个Java进程里面占用CPU最高的一个线程具体信息？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#统计每种网络状态的数量"><span class="toc-number">5.2.</span> <span class="toc-text">统计每种网络状态的数量</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#怎么查看哪个进程在用swap"><span class="toc-number">5.3.</span> <span class="toc-text">怎么查看哪个进程在用swap</span></a></li></ol></li></ol>
+        <p>软件领域有两种人才，一种是工程型的，一种是研究型的。在Linux领域里，相对于搞内核研究的来说，搞命令行的就属于工程型。工程型也有他自己的苦衷，比如，背诵命令就挺痛苦的，一般来说不太推荐背诵，第一覆盖的面不广，第二记的快忘的也快，浪费脑细胞。牛逼的记法就是用，用时间来冲淡烟云，见微知著，并体验其中的喜悦。爱她并天天抱她上床，真爱才成。</p>
+<p><code>Linux</code>命令好像还真不少，根本原因就是软件多，也有像<code>ag</code>这样的命令想替代<code>grep</code>,但大多数命令古老而坚挺。不是因为这些软件设计的有多好，原因是一些软件最开始入驻了系统，时间久了，就变成了一种约定，这种习惯改变代价太大，就像把所有键盘的<code>L</code>和<code>F</code>换一下一样。</p>
+<p>这片文章假定你已经了解大多数Linux命令，并了解操作系统的基本元素。如果你现在了解的命令还不足10个，下面的内容就不用看了。除了最基本的东西，本文列出一些对你的面试最常见的最能加分的地方，有些组合可能是你没见过的技巧。但本文仅仅是给出一个大致的轮廓和印象，为以后的专题性考察点作一个序。</p>
+<p>本文中出现的所有命令，应该熟记并熟练使用。</p>
+<h3 id="几种比较典型的Linux系统"><a href="#几种比较典型的Linux系统" class="headerlink" title="几种比较典型的Linux系统"></a>几种比较典型的Linux系统</h3><p>首先对目前的Linux版本有个大体的印象，大体分Desktop版和Server版，已经是百花齐放。</p>
+<ul>
+<li><strong>Ubuntu</strong> 最常见的Linux个人发行版，一位有情怀的南非富豪，有了钱你也可以这么做</li>
+<li><strong>CentOS</strong> 最常用Linux服务器发新版，RHEL的开放版本，因版权而生的轮子</li>
+<li><strong>Arch</strong>  滚动升级，海量二进制包，社区活跃，个人最爱</li>
+<li><strong>Gentoo</strong> 安装软件需要从源码开始编译，稳定，但用起来会很痛</li>
+<li><strong>LFS</strong> 从零构建Linux，跟着做一遍，Linux每根毛都看的清清楚楚</li>
+<li><strong>Kali</strong> 专做渗透用的，代表了发行版的一个发展路径，就是领域</li>
+</ul>
+<h4 id="首先要了解的概念"><a href="#首先要了解的概念" class="headerlink" title="首先要了解的概念"></a>首先要了解的概念</h4><ul>
+<li><strong>KISS</strong> Keep it Simple and Stupid，据说是哲学</li>
+<li><strong>一切皆文件</strong> 通常是文件的东西叫文件，进程、磁盘等也被抽象成了文件，比较离谱的管道、设备、socket等，也是文件。这是Linux最重要的组织方式。</li>
+<li><strong>管道</strong> <code>|</code> 分隔，前面命令的输出作为后面命令的输入，可以串联多个</li>
+<li><strong>重定向</strong> <ul>
+<li><code>&lt;</code> 将文件做为命令的输入</li>
+<li><code>&gt;</code> 将命令的输出输出到文件</li>
+<li><code>&gt;&gt;</code> 将命令的输出追加到文件</li>
+</ul>
+</li>
+<li><strong>SHELL</strong> 首先确认你的shell，一般最常用的是bash，也有不少用csh，zsh等的，通过<code>echo $SHELL</code>可以看到当前用户的shell，对应的配置文件也要相应改变。比如<code>.zshrc</code>,<code>.bashrc</code><h3 id="四大元素"><a href="#四大元素" class="headerlink" title="四大元素"></a>四大元素</h3>进入linux，我们首先关注的是四个元素：内存，cpu，存储，网络。Linux提供了足够的命令，让你窥探它的每个角落。接下来的命令都是些最常用的，不管精通不精通，想不起来要打屁股。<br><img src="/linux-4.png" alt="linux-4.-ng"></li>
+</ul>
+<h4 id="CPU"><a href="#CPU" class="headerlink" title="CPU"></a>CPU</h4><ul>
+<li>使用<code>top</code>查看cpu的load，使用shift+p按照cpu排序。需要了解wa，us等都是什么意思</li>
+<li>使用<code>uptime</code>查看系统启动时间和load，load是什么意思呢？什么算是系统过载？这是个高频问题，别怪我没告诉你</li>
+<li><code>ps</code>命令勃大茎深，除了查进程号外，你还需要知道R、S、D、T、Z、&lt;、N状态位的含义</li>
+<li><code>top</code>和<code>ps</code>很多功能是相通的，比如<code>watch &quot;ps -mo %cpu,%mem,pid,ppid,command ax&quot;</code> 相当于top的进程列表；<code>top -n 1 -bc</code> 和<code>ps -ef</code>的结果相似。</li>
+<li>有生就有死，可以用<code>kill</code>杀死进程。对java来说，需要关注<code>kill -9</code>、<code>kill -15</code>、<code>kill -3</code>的含义，kill的信号太多了，可以用<code>kill -l</code>查看，搞懂大多数信号大有裨益。</li>
+<li>如果暂时不想死，可以通过<code>&amp;</code>符号在后台执行，比如<code>tail -f a.log &amp;</code>。<code>jobs</code>命令可以查看当前后台的列表，想恢复的话，使用<code>fg</code>回到幕前。这都是终端作业，当你把<code>term</code>关了你的后台命令也会跟着消失，所以想让你的程序继续执行的话，需要<code>nohup</code>命令，此命令需要牢记</li>
+<li><strong>mpstat</strong> 显示了系统中 CPU 的各种统计信</li>
+<li>了解cpu亲和性<h4 id="内存"><a href="#内存" class="headerlink" title="内存"></a>内存</h4></li>
+<li><code>free -m</code> 命令，了解free、used、cached、swap各项的含义</li>
+<li><code>cat /proc/meminfo</code> 查看更详细的内存信息<br>细心的同学可能注意到，CPU和内存的信息，通过top等不同的命令显示的数值是一样的。</li>
+<li><code>slabtop</code> 用来显示内核缓存占用情况，比如遍历大量文件造成缓存目录项。曾在生产环境中遇到因执行<code>find /</code>造成<code>dentry_cache</code>耗尽服务器内存。</li>
+<li><code>vmstat</code> 命令是我最喜欢也最常用的命令之一，可以以最快的速度了解系统的运行状况。每个参数的意义都要搞懂。</li>
+<li><strong>swapon、swapoff</strong> 开启，关闭交换空间</li>
+<li><strong> sar</strong>  又一统计类轮子，一般用作采样工具</li>
+</ul>
+<h4 id="存储"><a href="#存储" class="headerlink" title="存储"></a>存储</h4><ul>
+<li>使用<code>df -h</code>查看系统磁盘使用概况</li>
+<li><strong>lsblk</strong> 列出块设备信息</li>
+<li><strong>du</strong> 查看目录或者文件大小</li>
+</ul>
+<h4 id="网络"><a href="#网络" class="headerlink" title="网络"></a>网络</h4><ul>
+<li><strong>rsync</strong> 强大的同步工具，可以增量哦</li>
+<li><strong>netstat</strong>  查看Linux中网络系统状态信息，各种</li>
+<li><strong>ss</strong>  它能够显示更多更详细的有关TCP和连接状态的信息，而且比netstat更快速更高效。</li>
+<li><strong>curl、wget</strong> 模拟请求工具、下载工具。如wget -r <a href="http://site" target="_blank" rel="noopener">http://site</a> 将下载整个站点</li>
+<li><strong>ab</strong> Apache服务器的性能测试工具</li>
+<li><strong>ifstat</strong> 统计网络接口流量状态</li>
+<li><strong>nslookup</strong> 查询域名DNS信息的工具，在内网根据ip查询域名是爽爆了</li>
+<li><strong>nc</strong> 网络工具中的瑞士军刀，不会用真是太可惜了</li>
+<li><strong>arp</strong> 可以显示和修改IP到MAC转换表</li>
+<li><strong>traceroute</strong> 显示数据包到主机间的路径，俗称几跳，跳的越少越快</li>
+<li><strong>tcpdump</strong> 不多说了，去下载wireshark了</li>
+<li><strong>wall</strong> 向当前所有打开的终端上输出信息。使用<code>who</code>命令发现女神正在终端上，可以求爱</li>
+</ul>
+<p>网络方面推荐安装体验一下kaliLinux，上面的工具会让你high到极点。</p>
+<h3 id="如何组织起来"><a href="#如何组织起来" class="headerlink" title="如何组织起来"></a>如何组织起来</h3><p>linux的命令很有意思，除了各种stat来监控状态，也有各种trace来进行深入的跟踪，也有各种top来统计资源消耗者，也有各种ls来查看系统硬件如lsblk、lsusb、lscpi。基本上跟着你的感觉走，就能找到相应的工具，因为约定是系统中最强大的导向。</p>
+<p>Linux有个比较另类的目录<code>/proc</code>，承载了每个命令的蹂躏。像<code>sysctl</code>命令，就是修改的<code>/proc/sys</code>目录下的映射项。不信看看<code>find /proc/sys -type f | wc -l</code>和<code>sysctl -a| wc -l</code>的结果是不是很像？</p>
+<p>/proc文件系统是一个伪文件系统，它只存在内存当中，而不占用外存空间。只不过以文件系统的方式为访问系统内核数据的操作提供接口。系统的所有状态都逃不过它的火眼金睛。例如:</p>
+<ul>
+<li><code>cat /proc/vmstat</code> 看一下，是不是和<code>vmstat</code>命令的输出很像?</li>
+<li><code>cat /proc/meminfo</code> 是不是最全的内存信息</li>
+<li><code>cat /proc/slabinfo</code> 这不就是<code>slabtop</code>的信息么</li>
+<li><code>cat /proc/devices</code> 已经加载对设备们</li>
+<li><code>cat /proc/loadavg</code> load avg原来就躺在这里啊</li>
+<li><code>cat /proc/stat</code> 所有的CPU活动信息</li>
+<li><code>ls /proc/$pid/fd</code> 静静地躺着<code>lsof</code>的结果</li>
+</ul>
+<h3 id="一般排查问题的方法"><a href="#一般排查问题的方法" class="headerlink" title="一般排查问题的方法"></a>一般排查问题的方法</h3><p>一般排查问题也是围绕着内存cpu等几个元素去排查。下图是一张大体的排查故障或者性能问题的过程，看图，不多说。</p>
+<p><img src="/linux_2016-06-04_11-46-40.png" alt="linux_2016-06-04_11-46-40.png"></p>
+<h3 id="应用场景举例"><a href="#应用场景举例" class="headerlink" title="应用场景举例"></a>应用场景举例</h3><p>下面举例从具体应用场景来说明各种命令的组合应用，此类场景数不胜数，需要个人积累。但强烈建议将sed和awk练的熟练一些。</p>
+<h4 id="怎么查看某个Java进程里面占用CPU最高的一个线程具体信息？"><a href="#怎么查看某个Java进程里面占用CPU最高的一个线程具体信息？" class="headerlink" title="怎么查看某个Java进程里面占用CPU最高的一个线程具体信息？"></a>怎么查看某个Java进程里面占用CPU最高的一个线程具体信息？</h4><ul>
+<li>获取进程中占用CPU最高的线程，计为n。<ul>
+<li>使用top <code>top -H -p pid</code>，肉眼观察之</li>
+<li>使用ps  <code>ps -mo spid,lwp,stime,time,%cpu -p pid</code></li>
+</ul>
+</li>
+<li>将线程号转化成十六进制<code>printf 0x%x n</code></li>
+<li>使用jstack找到相应进程，打印线程后的100行信息 <code>jstack -l pid| grep spid -A 100</code><h4 id="统计每种网络状态的数量"><a href="#统计每种网络状态的数量" class="headerlink" title="统计每种网络状态的数量"></a>统计每种网络状态的数量</h4><code>netstat -ant | awk &#39;{print $6}&#39; | sort  | uniq -c  | sort -n -k 1 -r</code><br>首先使用netstat查看列表，使用’awk’截取第六列，使用<code>uniq</code>进行统计，并对统计结果排序。当然，也可以这样。<br><code>netstat -ant | awk &#39;{arr[$6]++}END{for(i in arr){print arr[i]&quot; &quot;i }}&#39;  | sort -n -k 1 -r</code><br>这和“分析apache日志，给出当日访问ip的降序列表”是一样的问题。<h4 id="怎么查看哪个进程在用swap"><a href="#怎么查看哪个进程在用swap" class="headerlink" title="怎么查看哪个进程在用swap"></a>怎么查看哪个进程在用swap</h4>首先要了解/proc/$pid/smaps里有我们所需要的各种信息，其中Swap字段即是我们所需要的。只要循环遍历一下即可。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> `<span class="built_in">cd</span> /proc;ls |grep <span class="string">"^[0-9]"</span>|awk <span class="string">' $0 &gt;100'</span>` ;<span class="keyword">do</span> awk <span class="string">'/Swap:/&#123;a=a+$2&#125;END&#123;print '</span><span class="string">"<span class="variable">$i</span>"</span><span class="string">',a/1024"M"&#125;'</span> /proc/<span class="variable">$i</span>/smaps ;<span class="keyword">done</span> |sort -k2nr</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>最后，附上<a href="http://www.brendangregg.com/" target="_blank" rel="noopener">http://www.brendangregg.com/</a> 的大图一张<br><img src="/linux_observability_tools.png" alt="linux_observability_tools.png"></p>
+<p>看到这里，是不是觉得自己变帅了呢？希望能够引起你的兴趣。<br><img src="/xiuxiulian.jpg" alt="xiuxiulian.jpg"></p>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/linux/">linux</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/shell/">shell</a></li></ul>
+
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2016/05/03/ps-state/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">(转)  Linux进程状态(ps stat)之R、S、D、T、Z、X</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2016/07/03/java-hashmap-loop/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">(转)Java HashMap的死循环</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2016/06/04/linux-overview/" data-title="作为高级Java，你应该了解的Linux知识" data-url="http://java.jr-jr.com/2016/06/04/linux-overview/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

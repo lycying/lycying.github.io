@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>java中级：多线程 | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="java.util.concurrent.*, 包，你都用过哪些类? Semaphore, CyclicBarrier, CountDownLatch, Lock, ReentrantLock Executors, Callable and Future Synchronized collections (CopyOnWriteArrayList, ConcurrentHashMap, Block">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java中级：多线程">
+<meta property="og:url" content="http://java.jr-jr.com/2015/12/01/level2-thread/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="java.util.concurrent.*, 包，你都用过哪些类? Semaphore, CyclicBarrier, CountDownLatch, Lock, ReentrantLock Executors, Callable and Future Synchronized collections (CopyOnWriteArrayList, ConcurrentHashMap, Block">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.879Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="java中级：多线程">
+<meta name="twitter:description" content="java.util.concurrent.*, 包，你都用过哪些类? Semaphore, CyclicBarrier, CountDownLatch, Lock, ReentrantLock Executors, Callable and Future Synchronized collections (CopyOnWriteArrayList, ConcurrentHashMap, Block">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-level2-thread" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      java中级：多线程
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2015/12/01/level2-thread/" class="article-date"><time datetime="2015-12-01T04:04:44.000Z" itemprop="datePublished">2015-12-01</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/中级/">中级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#java-util-concurrent-包，你都用过哪些类"><span class="toc-number">1.</span> <span class="toc-text">java.util.concurrent.*, 包，你都用过哪些类?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#大体描述一下死锁发生的条件。写出一小段死锁的代码。"><span class="toc-number">2.</span> <span class="toc-text">大体描述一下死锁发生的条件。写出一小段死锁的代码。</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#了解volatile么-用它做过什么？"><span class="toc-number">3.</span> <span class="toc-text">了解volatile么?用它做过什么？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#用java实现一个简单的阻塞队列"><span class="toc-number">4.</span> <span class="toc-text">用java实现一个简单的阻塞队列</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Java线程池都有哪些参数"><span class="toc-number">5.</span> <span class="toc-text">Java线程池都有哪些参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在Java中CycliBarriar和CountdownLatch有什么区别？"><span class="toc-number">6.</span> <span class="toc-text">在Java中CycliBarriar和CountdownLatch有什么区别？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#有没有接触过虚假唤醒问题"><span class="toc-number">7.</span> <span class="toc-text">有没有接触过虚假唤醒问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#怎么检测wait是正常返回还是因为超时而返回。"><span class="toc-number">8.</span> <span class="toc-text">怎么检测wait是正常返回还是因为超时而返回。</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#谈一谈java-线程池的饱和策略"><span class="toc-number">9.</span> <span class="toc-text">谈一谈java-线程池的饱和策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#有3个线程ABC。按照ABC来运行（A线程输出A，B线程输出B，C线程输出C，以此类推，循环输出）"><span class="toc-number">10.</span> <span class="toc-text">有3个线程ABC。按照ABC来运行（A线程输出A，B线程输出B，C线程输出C，以此类推，循环输出）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是Java线程转储-Thread-Dump-，如何得到它？"><span class="toc-number">11.</span> <span class="toc-text">什么是Java线程转储(Thread Dump)，如何得到它？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Java中的Lock锁，有什么优点"><span class="toc-number">12.</span> <span class="toc-text">Java中的Lock锁，有什么优点?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是Callable和Future"><span class="toc-number">13.</span> <span class="toc-text">什么是Callable和Future?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#java-util-concurrent-Atomic类中有方法：compareAndSwap和weakCompareAndSwap什么区别"><span class="toc-number">14.</span> <span class="toc-text">java.util.concurrent.Atomic类中有方法：compareAndSwap和weakCompareAndSwap什么区别?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么叫spin-lock"><span class="toc-number">15.</span> <span class="toc-text">什么叫spin lock</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是互斥锁，什么是读写锁"><span class="toc-number">16.</span> <span class="toc-text">什么是互斥锁，什么是读写锁?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#java-为什么wait-notify-notifyAll-必须在同步方法-代码块中调用？"><span class="toc-number">17.</span> <span class="toc-text">java 为什么wait(),notify(),notifyAll()必须在同步方法/代码块中调用？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么AtomicInteger里面的compareAndSet和weakCompareAndSet方法实现完全一样，注释说明却不同？"><span class="toc-number">18.</span> <span class="toc-text">为什么AtomicInteger里面的compareAndSet和weakCompareAndSet方法实现完全一样，注释说明却不同？</span></a></li></ol>
+        <h3 id="java-util-concurrent-包，你都用过哪些类"><a href="#java-util-concurrent-包，你都用过哪些类" class="headerlink" title="java.util.concurrent.*, 包，你都用过哪些类?"></a>java.util.concurrent.*, 包，你都用过哪些类?</h3><blockquote>
+<p>Semaphore, CyclicBarrier, CountDownLatch, Lock, ReentrantLock<br> Executors, Callable and Future<br> Synchronized collections (CopyOnWriteArrayList, ConcurrentHashMap, BlockingQueue)</p>
+</blockquote>
+<h3 id="大体描述一下死锁发生的条件。写出一小段死锁的代码。"><a href="#大体描述一下死锁发生的条件。写出一小段死锁的代码。" class="headerlink" title="大体描述一下死锁发生的条件。写出一小段死锁的代码。"></a>大体描述一下死锁发生的条件。写出一小段死锁的代码。</h3><blockquote>
+<p>死锁产生的四个必要条件。</p>
+<ul>
+<li>互斥使用，即当资源被一个线程使用(占有)时，别的线程不能使用 </li>
+<li>不可抢占，资源请求者不能强制从资源占有者手中夺取资源，资源只能由资源占有者主动释放。 </li>
+<li>请求和保持，即当资源请求者在请求其他的资源的同时保持对原有资源的占有。 </li>
+<li>循环等待，即存在一个等待队列：P1占有P2的资源，P2占有P3的资源，P3占有P1的资源。这样就形成了一个等待环路。<figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> class DeadlockTest &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> main(<span class="keyword">String</span>[] args) &#123;   </span><br><span class="line">        <span class="keyword">String</span> s1 = <span class="string">"S1"</span>;</span><br><span class="line">        <span class="keyword">String</span> s2 = <span class="string">"S2"</span>;</span><br><span class="line">        Thread t1 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> DeadlockCause(s1, s2));</span><br><span class="line">        Thread t2 = <span class="keyword">new</span> Thread(<span class="keyword">new</span> DeadlockCause(s2, s1));</span><br><span class="line">        t1.start();</span><br><span class="line">        t2.start();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    class DeadlockCause implements Runnable &#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">Object</span> firstLock;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">Object</span> secondLock;</span><br><span class="line">        <span class="keyword">public</span> DeadlockCause(<span class="keyword">Object</span> o1, <span class="keyword">Object</span> o2) &#123;</span><br><span class="line">            firstLock = o1;</span><br><span class="line">            secondLock = o2;</span><br><span class="line">        &#125;</span><br><span class="line">        @Override</span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> run() &#123;</span><br><span class="line">            <span class="keyword">synchronized</span>(firstLock)&#123;</span><br><span class="line">                System.out.<span class="built_in">println</span>(Thread.currentThread().getName() +  <span class="string">" holds the lock on "</span> + firstLock);</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException ex) &#123;</span><br><span class="line">                    Logger.getLogger(DeadlockCause.class.getName()).<span class="built_in">log</span>(Level.SEVERE, <span class="keyword">null</span>, ex);</span><br><span class="line">                &#125;</span><br><span class="line">                System.out.<span class="built_in">println</span>(Thread.currentThread().getName() +  <span class="string">" tries to get the lock on "</span> + secondLock);</span><br><span class="line">                <span class="keyword">synchronized</span>(secondLock)&#123;</span><br><span class="line">                    System.out.<span class="built_in">println</span>(Thread.currentThread().getName() +  <span class="string">" holds the lock on "</span> + secondLock);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</blockquote>
+<h3 id="了解volatile么-用它做过什么？"><a href="#了解volatile么-用它做过什么？" class="headerlink" title="了解volatile么?用它做过什么？"></a>了解volatile么?用它做过什么？</h3><blockquote>
+<p>volatile仅进行内存同步，而不会做线程的同步。监视器锁的happens-before规则保证释放监视器和获取监视器的两个线程之间的内存可见性，这意味着对一个volatile变量的读，总是能看到（任意线程）对这个volatile变量最后的写入。当线程欲引用volatile字段的值时，通常都会发生从主存储器到工作存储器的拷贝操作。而相反地，将值指定给volatile字段后，工作存储器的内容便会映像到主存储器。指定给long、double类型的操作不保证会以atomic的方式来进行。但可以通过volatile来约定用atomic方式来进行赋值操作。<br>volatile的典型特点是每次读到的都是最新的值，所以一般最常用的就是控制一个线程的退出（比如tomcat关闭时，要关闭某些线程)<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">boolean</span> close = <span class="keyword">false</span>;</span><br><span class="line">...</span><br><span class="line">run()&#123;<span class="keyword">while</span>(!close)&#123;`<span class="keyword">do</span> some things`&#125;&#125;</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<h3 id="用java实现一个简单的阻塞队列"><a href="#用java实现一个简单的阻塞队列" class="headerlink" title="用java实现一个简单的阻塞队列"></a>用java实现一个简单的阻塞队列</h3><blockquote>
+<figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> BlockingQueue(<span class="built_in">int</span> limit) &#123;</span><br><span class="line">      <span class="keyword">this</span>.limit = limit;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> enqueue(<span class="keyword">Object</span> item) <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line">      <span class="keyword">while</span> (<span class="keyword">this</span>.queue.<span class="built_in">size</span>() == <span class="keyword">this</span>.limit) &#123;</span><br><span class="line">          wait();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (<span class="keyword">this</span>.queue.<span class="built_in">size</span>() == <span class="number">0</span>) &#123;</span><br><span class="line">          notifyAll();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">this</span>.queue.<span class="built_in">add</span>(item);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">Object</span> dequeue() <span class="keyword">throws</span> InterruptedException &#123;</span><br><span class="line">      <span class="keyword">while</span> (<span class="keyword">this</span>.queue.<span class="built_in">size</span>() == <span class="number">0</span>) &#123;</span><br><span class="line">          wait();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (<span class="keyword">this</span>.queue.<span class="built_in">size</span>() == <span class="keyword">this</span>.limit) &#123;</span><br><span class="line">          notifyAll();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">this</span>.queue.remove(<span class="number">0</span>);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<h3 id="Java线程池都有哪些参数"><a href="#Java线程池都有哪些参数" class="headerlink" title="Java线程池都有哪些参数"></a>Java线程池都有哪些参数</h3><blockquote>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> ThreadPoolExecutor(<span class="keyword">int</span> corePoolSize,</span><br><span class="line">           <span class="keyword">int</span> maximumPoolSize,</span><br><span class="line">           <span class="keyword">long</span> keepAliveTime,</span><br><span class="line">           TimeUnit unit,</span><br><span class="line">           BlockingQueue&lt;Runnable&gt; workQueue,</span><br><span class="line">           ThreadFactory threadFactory,</span><br><span class="line">           RejectedExecutionHandler <span class="keyword">handler</span>)</span><br></pre></td></tr></table></figure>
+</blockquote>
+<h3 id="在Java中CycliBarriar和CountdownLatch有什么区别？"><a href="#在Java中CycliBarriar和CountdownLatch有什么区别？" class="headerlink" title="在Java中CycliBarriar和CountdownLatch有什么区别？"></a>在Java中CycliBarriar和CountdownLatch有什么区别？</h3><blockquote>
+<p>这个线程问题主要用来检测你是否熟悉JDK5中的并发包。这两个的区别是CyclicBarrier可以重复使用已经通过的障碍，而CountdownLatch不能重复使用。</p>
+</blockquote>
+<h3 id="有没有接触过虚假唤醒问题"><a href="#有没有接触过虚假唤醒问题" class="headerlink" title="有没有接触过虚假唤醒问题"></a>有没有接触过虚假唤醒问题</h3><blockquote>
+<p>虚假唤醒就是一些obj.wait()会在除了obj.notify()和obj.notifyAll()的其他情况被唤醒，而此时是不应该唤醒的。解决的办法是基于while来反复判断进入正常操作的临界条件是否满足：<br><figure class="highlight gauss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">synchronized (obj) &#123;  </span><br><span class="line">           <span class="keyword">while</span> (&lt;condition does <span class="keyword">not</span> hold&gt;)  </span><br><span class="line">               obj.<span class="built_in">wait</span>();  </span><br><span class="line">           ... <span class="comment">// Perform action appropriate to condition  </span></span><br><span class="line">       &#125;</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<h3 id="怎么检测wait是正常返回还是因为超时而返回。"><a href="#怎么检测wait是正常返回还是因为超时而返回。" class="headerlink" title="怎么检测wait是正常返回还是因为超时而返回。"></a>怎么检测wait是正常返回还是因为超时而返回。</h3><blockquote>
+<p>目前没有方法，除非修改jdk源码。</p>
+</blockquote>
+<h3 id="谈一谈java-线程池的饱和策略"><a href="#谈一谈java-线程池的饱和策略" class="headerlink" title="谈一谈java-线程池的饱和策略"></a>谈一谈java-线程池的饱和策略</h3><blockquote>
+<p>ThreadPoolExecutor的饱和策略通过调用setRejectedExecutionHandler来修改。不同的饱和策略如下 ：<br>AbortPolicy:中止,executor抛出未检查RejectedExecutionException，调用者捕获这个异常，然后自己编写能满足自己需求的处理代码<br>DiscardRunsPolicy:遗弃最旧的，选择丢弃的任务，是本应接下来就执行的任务。<br>DiscardPolicy:遗弃会默认放弃最新提交的任务（这个任务不能进入队列等待执行时）<br>CallerRunsPolicy：调用者运行，既不会丢弃哪个任务，也不会抛出任何异常，把一些任务推回到调用者那里，以此减缓新任务流。它不会在池线程中执行最新提交的任务，但它会在一个调用了execute的线程中执行。</p>
+</blockquote>
+<h3 id="有3个线程ABC。按照ABC来运行（A线程输出A，B线程输出B，C线程输出C，以此类推，循环输出）"><a href="#有3个线程ABC。按照ABC来运行（A线程输出A，B线程输出B，C线程输出C，以此类推，循环输出）" class="headerlink" title="有3个线程ABC。按照ABC来运行（A线程输出A，B线程输出B，C线程输出C，以此类推，循环输出）"></a>有3个线程ABC。按照ABC来运行（A线程输出A，B线程输出B，C线程输出C，以此类推，循环输出）</h3><blockquote>
+<p>TODO</p>
+</blockquote>
+<h3 id="什么是Java线程转储-Thread-Dump-，如何得到它？"><a href="#什么是Java线程转储-Thread-Dump-，如何得到它？" class="headerlink" title="什么是Java线程转储(Thread Dump)，如何得到它？"></a>什么是Java线程转储(Thread Dump)，如何得到它？</h3><blockquote>
+<p>线程转储是一个JVM活动线程的列表，它对于分析系统瓶颈和死锁非常有用。有很多方法可以获取线程转储——使用Profiler，<code>Kill -3</code>命令，<code>jstack</code>工具等等。我更喜欢jstack工具，因为它容易使用并且是JDK自带的。由于它是一个基于终端的工具，所以我们可以编写一些脚本去定时的产生线程转储以待分析。</p>
+</blockquote>
+<h3 id="Java中的Lock锁，有什么优点"><a href="#Java中的Lock锁，有什么优点" class="headerlink" title="Java中的Lock锁，有什么优点?"></a>Java中的Lock锁，有什么优点?</h3><blockquote>
+<p>Lock接口比同步方法和同步块提供了更具扩展性的锁操作。他们允许更灵活的结构，可以具有完全不同的性质，并且可以支持多个相关类的条件对象。<br>它的优势有：</p>
+<ul>
+<li>可以使锁更公平</li>
+<li>可以使线程在等待锁的时候响应中断</li>
+<li>可以让线程尝试获取锁，并在无法获取锁的时候立即返回或者等待一段时间</li>
+<li>可以在不同的范围，以不同的顺序获取和释放锁</li>
+</ul>
+</blockquote>
+<h3 id="什么是Callable和Future"><a href="#什么是Callable和Future" class="headerlink" title="什么是Callable和Future?"></a>什么是Callable和Future?</h3><blockquote>
+<p>Callable接口使用泛型去定义它的返回类型。Future提供了get()方法让我们可以等待Callable结束并获取它的执行结果。</p>
+</blockquote>
+<h3 id="java-util-concurrent-Atomic类中有方法：compareAndSwap和weakCompareAndSwap什么区别"><a href="#java-util-concurrent-Atomic类中有方法：compareAndSwap和weakCompareAndSwap什么区别" class="headerlink" title="java.util.concurrent.Atomic类中有方法：compareAndSwap和weakCompareAndSwap什么区别?"></a>java.util.concurrent.Atomic类中有方法：compareAndSwap和weakCompareAndSwap什么区别?</h3><blockquote>
+<p>JSR规范中说：以原子方式读取和有条件地写入变量但不 创建任何 happen-before 排序，因此不提供与除 weakCompareAndSet 目标外任何变量以前或后续读取或写入操作有关的任何保证。大意就是说调用weakCompareAndSet时并不能保证不存在happen-before的发生（也就是可能存在指令重排序导致此操作失败）。但是从Java源码来看，其实此方法并没有实现JSR规范的要求，最后效果和compareAndSet是<code>等效的</code>，都调用了<code>unsafe.compareAndSwapInt()</code>完成操作。</p>
+</blockquote>
+<h3 id="什么叫spin-lock"><a href="#什么叫spin-lock" class="headerlink" title="什么叫spin lock"></a>什么叫spin lock</h3><blockquote>
+<p>CAS</p>
+</blockquote>
+<h3 id="什么是互斥锁，什么是读写锁"><a href="#什么是互斥锁，什么是读写锁" class="headerlink" title="什么是互斥锁，什么是读写锁?"></a>什么是互斥锁，什么是读写锁?</h3><blockquote>
+<p>TODO</p>
+</blockquote>
+<h3 id="java-为什么wait-notify-notifyAll-必须在同步方法-代码块中调用？"><a href="#java-为什么wait-notify-notifyAll-必须在同步方法-代码块中调用？" class="headerlink" title="java 为什么wait(),notify(),notifyAll()必须在同步方法/代码块中调用？"></a>java 为什么wait(),notify(),notifyAll()必须在同步方法/代码块中调用？</h3><blockquote>
+<p><a href="/2015/12/05/java-wait-notify-sync/">看这里看这里看这里</a></p>
+</blockquote>
+<h3 id="为什么AtomicInteger里面的compareAndSet和weakCompareAndSet方法实现完全一样，注释说明却不同？"><a href="#为什么AtomicInteger里面的compareAndSet和weakCompareAndSet方法实现完全一样，注释说明却不同？" class="headerlink" title="为什么AtomicInteger里面的compareAndSet和weakCompareAndSet方法实现完全一样，注释说明却不同？"></a>为什么AtomicInteger里面的compareAndSet和weakCompareAndSet方法实现完全一样，注释说明却不同？</h3><blockquote>
+<p>扯淡的问题，如果不想回答，直接说不知道。<br>这个问题，一个老外的回答比较靠谱，这里给出链接：<a href="http://stackoverflow.com/questions/2443239/java-atomicinteger-what-are-the-differences-between-compareandset-and-weakcompar" target="_blank" rel="noopener">the difference between compareAndSet and weakCompareAndSet</a>。核心观点就是人家保留更改这个实现的权利。现在一样可能是暂时的，将来可能会不一样，所以使用接口时，还是按照人家接口说明来吧。</p>
+</blockquote>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2015/12/01/level2-object/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">java中级：基础知识</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2015/12/01/level2-network/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">java中级：网络开发</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2015/12/01/level2-thread/" data-title="java中级：多线程" data-url="http://java.jr-jr.com/2015/12/01/level2-thread/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

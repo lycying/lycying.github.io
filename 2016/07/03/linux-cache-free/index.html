@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>(转)手动释放linux内存cache和脚本定时释放 | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="当在Linux下频繁存取文件后，物理内存会很快被用光，当程序结束后，内存不会被正常释放，而是一直作为caching。这个问题，貌似有不少人在问，不过都没有看到有什么很好解决的办法。那么我来谈谈这个问题。 通常情况先来说说free命令：12345# free -mtotal used free shared buffers cachedMem: 249 163 86 0 10 94-/+ buffe">
+<meta name="keywords" content="linux,cache">
+<meta property="og:type" content="article">
+<meta property="og:title" content="(转)手动释放linux内存cache和脚本定时释放">
+<meta property="og:url" content="http://java.jr-jr.com/2016/07/03/linux-cache-free/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="当在Linux下频繁存取文件后，物理内存会很快被用光，当程序结束后，内存不会被正常释放，而是一直作为caching。这个问题，貌似有不少人在问，不过都没有看到有什么很好解决的办法。那么我来谈谈这个问题。 通常情况先来说说free命令：12345# free -mtotal used free shared buffers cachedMem: 249 163 86 0 10 94-/+ buffe">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.880Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="(转)手动释放linux内存cache和脚本定时释放">
+<meta name="twitter:description" content="当在Linux下频繁存取文件后，物理内存会很快被用光，当程序结束后，内存不会被正常释放，而是一直作为caching。这个问题，貌似有不少人在问，不过都没有看到有什么很好解决的办法。那么我来谈谈这个问题。 通常情况先来说说free命令：12345# free -mtotal used free shared buffers cachedMem: 249 163 86 0 10 94-/+ buffe">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-linux-cache-free" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      (转)手动释放linux内存cache和脚本定时释放
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2016/07/03/linux-cache-free/" class="article-date"><time datetime="2016-07-03T05:36:12.000Z" itemprop="datePublished">2016-07-03</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/中级/">中级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#通常情况"><span class="toc-number">1.</span> <span class="toc-text">通常情况</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#手动释放缓存"><span class="toc-number">2.</span> <span class="toc-text">手动释放缓存</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#我的意见"><span class="toc-number">3.</span> <span class="toc-text">我的意见</span></a></li></ol>
+        <p>当在Linux下频繁存取文件后，物理内存会很快被用光，当程序结束后，内存不会被正常释放，而是一直作为caching。这个问题，貌似有不少人在问，不过都没有看到有什么很好解决的办法。那么我来谈谈这个问题。</p>
+<h3 id="通常情况"><a href="#通常情况" class="headerlink" title="通常情况"></a>通常情况</h3><p>先来说说free命令：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># free -m</span></span><br><span class="line">total used free shared buffers cached</span><br><span class="line">Mem: 249 163 86 0 10 94</span><br><span class="line">-/+ buffers/cache: 58 191</span><br><span class="line">Swap: 511 0 511</span><br></pre></td></tr></table></figure></p>
+<p>其中：</p>
+<ul>
+<li>total 内存总数</li>
+<li>used 已经使用的内存数</li>
+<li>free 空闲的内存数</li>
+<li>shared 多个进程共享的内存总额</li>
+<li>buffers Buffer Cache和cached Page Cache 磁盘缓存的大小</li>
+<li>-buffers/cache (已用)的内存数:used - buffers - cached</li>
+<li>+buffers/cache(可用)的内存数:free + buffers + cached</li>
+<li>可用的memory=free memory+buffers+cached</li>
+</ul>
+<p>有了这个基础后，可以得知，我现在used为163MB，free为86MB，buffer和cached分别为10MB，94MB。<br>那么我们来看看，如果我执行复制文件，内存会发生什么变化。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cp -r /etc ~/test/</span></span><br><span class="line"><span class="comment"># free -m</span></span><br><span class="line">total used free shared buffers cached</span><br><span class="line">Mem: 249 244 4 0 8 174</span><br><span class="line">-/+ buffers/cache: 62 187</span><br><span class="line">Swap: 511 0 511</span><br></pre></td></tr></table></figure>
+<p>在我命令执行结束后，used为244MB，free为4MB，buffers为8MB，cached为174MB，天呐，都被cached吃掉了。别紧张，这是为了提高文件读取效率的做法。</p>
+<p>为了提高磁盘存取效率，Linux做了一些精心的设计，除了对dentry进行缓存（用于VFS，加速文件路径名到inode的转换），还采取了两种主要Cache方式：<code>Buffer Cache</code>和<code>Page Cache</code>。前者针对磁盘块的读写，后者针对文件inode的读写。这些Cache有效缩短了 I/O系统调用（比如read，write，getdents）的时间。</p>
+<p>那么有人说过段时间，linux会自动释放掉所用的内存。等待一段时间后，我们使用free再来试试，看看是否有释放？<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># free -m</span></span><br><span class="line">total used free shared buffers cached</span><br><span class="line">Mem: 249 244 5 0 8 174</span><br><span class="line">-/+ buffers/cache: 61 188</span><br><span class="line">Swap: 511 0 511</span><br></pre></td></tr></table></figure></p>
+<p>似乎没有任何变化。（实际情况下，内存的管理还与Swap有关）那么我能否手动释放掉这些内存呢？回答是可以的！</p>
+<h3 id="手动释放缓存"><a href="#手动释放缓存" class="headerlink" title="手动释放缓存"></a>手动释放缓存</h3><p>/proc是一个虚拟文件系统，我们可以通过对它的读写操作做为与kernel实体间进行通信的一种手段。也就是说可以通过修改/proc中的文件，来对当前kernel的行为做出调整。那么我们可以通过调整/proc/sys/vm/drop_caches来释放内存。操作如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cat /proc/sys/vm/drop_caches</span></span><br><span class="line">0</span><br></pre></td></tr></table></figure>
+<p>首先，/proc/sys/vm/drop_caches的值，默认为0。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># sync</span></span><br></pre></td></tr></table></figure>
+<p>手动执行sync命令（描述：sync 命令运行 sync 子例程。如果必须停止系统，则运行sync 命令以确保文件系统的完整性。sync 命令将所有未写的系统缓冲区写到磁盘中，包含已修改的 i-node、已延迟的块 I/O 和读写映射文件）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># echo 3 &gt; /proc/sys/vm/drop_caches</span></span><br><span class="line"><span class="comment"># cat /proc/sys/vm/drop_caches</span></span><br><span class="line">3</span><br></pre></td></tr></table></figure>
+<p>将/proc/sys/vm/drop_caches值设为3</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># free -m</span></span><br><span class="line">total used free shared buffers cached</span><br><span class="line">Mem: 249 66 182 0 0 11</span><br><span class="line">-/+ buffers/cache: 55 194</span><br><span class="line">Swap: 511 0 511</span><br></pre></td></tr></table></figure>
+<p>再来运行free命令，会发现现在的used为66MB，free为182MB，buffers为0MB，cached为11MB。那么有效的释放了buffer和cache。</p>
+<p>有关/proc/sys/vm/drop_caches的用法在下面进行了说明<br>/proc/sys/vm/drop_caches (since Linux 2.6.16)<br>Writing to this file causes the kernel to drop clean caches,dentries and inodes from memory, causing that memory to become free.<br>To free pagecache, use echo 1 &gt; /proc/sys/vm/drop_caches;<br>to free dentries and inodes, use echo 2 &gt; /proc/sys/vm/drop_caches;<br>to free pagecache, dentries and inodes, use echo 3 &gt; /proc/sys/vm/drop_caches.<br>Because this is a non-destructive operation and dirty objects are not freeable, the user should run sync first.</p>
+<h3 id="我的意见"><a href="#我的意见" class="headerlink" title="我的意见"></a>我的意见</h3><p>上述文章就长期以来很多用户对Linux内存管理方面的疑问，给出了一个比较“直观”的回复，我更觉得有点像是核心开发小组的妥协。对于是否需要使用这个值，或向用户提及这个值，我是有保留意见的：</p>
+<p>从man可以看到，这值从2.6.16以后的核心版本才提供，也就是老版的操作系统，如红旗DC 5.0、RHEL 4.x之前的版本都没有；<br>若对于系统内存是否够用的观察，我还是原意去看swap的使用率和si/so两个值的大小；<br>用户常见的疑问是，为什么free这么小，是否关闭应用后内存没有释放？但实际上，我们都知道这是因为Linux对内存的管理与Windows不同，free小并不是说内存不够用了，应该看的是free的第二行最后一个值：-/+ buffers/cache: 58 191，这才是系统可用的内存大小。</p>
+<p>实际项目中告诉我们，如果因为是应用有像内存泄露、溢出的问题，从swap的使用情况是可以比较快速可以判断的，但free上面反而比较难查看。相反，如果在这个时候，我们告诉用户，修改系统的一个值，“可以”释放内存，free就大了。用户会怎么想？不会觉得操作系统“有问题”吗？所以说，我觉得既然核心是可以快速清空buffer或cache，也不难做到（这从上面的操作中可以明显看到），但核心并没有这样做（默认值是0），我们就不应该随便去改变它。一般情况下，应用在系统上稳定运行了，free值也会保持在一个稳定值的，虽然看上去可能比较小。</p>
+<p>当发生内存不足、应用获取不到可用内存、OOM错误等问题时，还是更应该去分析应用方面的原因，如用户量太大导致内存不足、发生应用内存溢出等情况，否则，清空buffer，强制腾出free的大小，可能只是把问题给暂时屏蔽了。</p>
+<p>我觉得，排除内存不足的情况外，除非是在软件开发阶段，需要临时清掉buffer，以判断应用的内存使用情况；或应用已经不再提供支持，即使应用对内存的时候确实有问题，而且无法避免的情况下，才考虑定时清空buffer。（可惜，这样的应用通常都是运行在老的操作系统版本上，上面的操作也解决不了）。而生产环境下的服务器可以不考虑手工释放内存，这样会带来更多的问题。记住内存是拿来用的，不是拿来看的。不像windows。</p>
+<p>无论你的真实物理内存有多少，他都要拿硬盘交换文件来读。这也就是windows为什么常常提示虚拟空间不足的原因，你们想想多无聊，在内存还有大部分的时候，拿出一部分硬盘空间来充当内存。硬盘怎么会快过内存，所以我们看linux，只要不用swap的交换空间，就不用担心自己的内存太少。如果常常swap用很多,可能你就要考虑加物理内存了，这也是linux看内存是否够用的标准哦。当然这仅代表我个人意见，也欢迎大家来交流讨论。</p>
+<p>以上内容转载于考试大，下面是我写的一个内存释放的脚本，分享给大家：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># vim /root/satools/freemem.sh</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line">used=`free -m | awk <span class="string">'NR==2'</span> | awk <span class="string">'&#123;print $3&#125;'</span>`</span><br><span class="line">free=`free -m | awk <span class="string">'NR==2'</span> | awk <span class="string">'&#123;print $4&#125;'</span>`</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"==========================="</span> &gt;&gt; /var/<span class="built_in">log</span>/mem.log</span><br><span class="line">date &gt;&gt; /var/<span class="built_in">log</span>/mem.log</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"Memory usage | [Use：<span class="variable">$&#123;used&#125;</span>MB][Free：<span class="variable">$&#123;free&#125;</span>MB]"</span> &gt;&gt; /var/<span class="built_in">log</span>/mem.log</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ <span class="variable">$free</span> -le 100 ] ; <span class="keyword">then</span></span><br><span class="line">                sync &amp;&amp; <span class="built_in">echo</span> 1 &gt; /proc/sys/vm/drop_caches</span><br><span class="line">                sync &amp;&amp; <span class="built_in">echo</span> 2 &gt; /proc/sys/vm/drop_caches</span><br><span class="line">                sync &amp;&amp; <span class="built_in">echo</span> 3 &gt; /proc/sys/vm/drop_caches</span><br><span class="line">                <span class="built_in">echo</span> <span class="string">"OK"</span> &gt;&gt; /var/<span class="built_in">log</span>/mem.log</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">                <span class="built_in">echo</span> <span class="string">"Not required"</span> &gt;&gt; /var/<span class="built_in">log</span>/mem.log</span><br></pre></td></tr></table></figure></p>
+<p>将脚本添加到crond任务，定时执行。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># echo "*/30 * * * * root /root/satools/freemem.sh" &gt;&gt; /etc/crondtab</span></span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/cache/">cache</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/linux/">linux</a></li></ul>
+
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2016/07/03/thread-basic/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">(转)多线程经典问题</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2016/07/08/numa-linux/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">(资源)SWAP的罪与罚</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2016/07/03/linux-cache-free/" data-title="(转)手动释放linux内存cache和脚本定时释放" data-url="http://java.jr-jr.com/2016/07/03/linux-cache-free/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>java Object类占用内存大小计算 | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言这部分信息，对于初级程序员来说并没有实质性的帮助。但对于中高级程序员来说，随着对系统开发的深入，是必须了解的一部分。 前提：JVM规范中没有针对运行时Java对象的内存结构的说明，这也就是说JVM供应商可以按照自己的需要来实现这一点。后果就是，同一个类在不同的JVM上运行的实例对象占用的内存大小会有差别。假设运行在Sun HotSpot的JVM 32位Java上 一个Object占用的空间在J">
+<meta name="keywords" content="object">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java Object类占用内存大小计算">
+<meta property="og:url" content="http://java.jr-jr.com/2015/12/02/java-object-size/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="前言这部分信息，对于初级程序员来说并没有实质性的帮助。但对于中高级程序员来说，随着对系统开发的深入，是必须了解的一部分。 前提：JVM规范中没有针对运行时Java对象的内存结构的说明，这也就是说JVM供应商可以按照自己的需要来实现这一点。后果就是，同一个类在不同的JVM上运行的实例对象占用的内存大小会有差别。假设运行在Sun HotSpot的JVM 32位Java上 一个Object占用的空间在J">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://java.jr-jr.com/javaobject.png">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.873Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="java Object类占用内存大小计算">
+<meta name="twitter:description" content="前言这部分信息，对于初级程序员来说并没有实质性的帮助。但对于中高级程序员来说，随着对系统开发的深入，是必须了解的一部分。 前提：JVM规范中没有针对运行时Java对象的内存结构的说明，这也就是说JVM供应商可以按照自己的需要来实现这一点。后果就是，同一个类在不同的JVM上运行的实例对象占用的内存大小会有差别。假设运行在Sun HotSpot的JVM 32位Java上 一个Object占用的空间在J">
+<meta name="twitter:image" content="http://java.jr-jr.com/javaobject.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-java-object-size" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      java Object类占用内存大小计算
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2015/12/02/java-object-size/" class="article-date"><time datetime="2015-12-02T06:53:03.000Z" itemprop="datePublished">2015-12-02</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/高级/">高级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#一个Object占用的空间"><span class="toc-number">2.</span> <span class="toc-text">一个Object占用的空间</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#java-Object-存储"><span class="toc-number">3.</span> <span class="toc-text">java Object 存储</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#结构"><span class="toc-number">3.1.</span> <span class="toc-text">结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#对象头-Mark-Word"><span class="toc-number">3.2.</span> <span class="toc-text">对象头(Mark Word)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#基本类型"><span class="toc-number">3.3.</span> <span class="toc-text">基本类型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#引用类型"><span class="toc-number">3.4.</span> <span class="toc-text">引用类型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#填充物"><span class="toc-number">3.5.</span> <span class="toc-text">填充物</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#例子"><span class="toc-number">4.</span> <span class="toc-text">例子</span></a></li></ol>
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>这部分信息，对于初级程序员来说并没有实质性的帮助。但对于中高级程序员来说，随着对系统开发的深入，是必须了解的一部分。</p>
+<p>前提：JVM规范中没有针对运行时Java对象的内存结构的说明，这也就是说JVM供应商可以按照自己的需要来实现这一点。后果就是，同一个类在不同的JVM上运行的实例对象占用的内存大小会有差别。<strong>假设运行在Sun HotSpot的JVM 32位Java上</strong></p>
+<h3 id="一个Object占用的空间"><a href="#一个Object占用的空间" class="headerlink" title="一个Object占用的空间"></a>一个Object占用的空间</h3><p>在Java中，一个空Object对象的大小是<strong>8byte</strong>，这个大小只是保存堆中一个没有任何属性的对象的大小。看下面语句：<br><figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Object</span> ob = <span class="keyword">new</span> <span class="built_in">Object</span>();</span><br></pre></td></tr></table></figure></p>
+<p>以上语句声明了一个新的对象，它所占的空间为：<strong>4byte+8byte</strong>。除了<strong>8byte</strong>的堆内存，还有<strong>4byte</strong>的引用空间大小。</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>大小(byte)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>byte</td>
+<td>1</td>
+</tr>
+<tr>
+<td>short</td>
+<td>2</td>
+</tr>
+<tr>
+<td>int</td>
+<td>4</td>
+</tr>
+<tr>
+<td>long</td>
+<td>8</td>
+</tr>
+<tr>
+<td>float</td>
+<td>4</td>
+</tr>
+<tr>
+<td>double</td>
+<td>8</td>
+</tr>
+<tr>
+<td>boolean</td>
+<td>?</td>
+</tr>
+<tr>
+<td>array</td>
+<td>12</td>
+</tr>
+</tbody>
+</table>
+<p>关于boolean占用的大小，有点特殊。</p>
+<blockquote>
+<p>虽然 Java 虚拟机定义了 boolean 这种数据类型，但是只对它提供了非常有限的支持。在Java 虚拟机中没有任何供 boolean 值专用的字节码指令，在 Java 语言之中涉及到 <code>boolean</code> 类型值的运算，在编译之后都使用 Java 虚拟机中的 int 数据类型来代替。<br>-<br>Java 虚拟机直接支持 boolean 类型的数组，虚拟机的 <code>newarray</code> 指令可以创建这种数组。 boolean 的数组类型的访问与修改共用 byte 类型数组的 <code>baload</code> 和 <code>bastore</code> 指令。<br>参考 <a href="http://stackoverflow.com/questions/1907318/java-boolean-primitive-type-size" target="_blank" rel="noopener">http://stackoverflow.com/questions/1907318/java-boolean-primitive-type-size</a></p>
+</blockquote>
+<h3 id="java-Object-存储"><a href="#java-Object-存储" class="headerlink" title="java Object 存储"></a>java Object 存储</h3><p>更多资料：<br><a href="http://www.importnew.com/1305.html" target="_blank" rel="noopener">Java对象内存结构</a><br><a href="http://www.infoq.com/cn/articles/jvm-hotspot" target="_blank" rel="noopener">HotSpot虚拟机对象探秘</a></p>
+<h4 id="结构"><a href="#结构" class="headerlink" title="结构"></a>结构</h4><p>我们先来看看在堆中单个的Object长什么样子<br><img src="/javaobject.png" alt="javaobject"></p>
+<h4 id="对象头-Mark-Word"><a href="#对象头-Mark-Word" class="headerlink" title="对象头(Mark Word)"></a>对象头(Mark Word)</h4><p>在Sun JVM中，（除了数组之外的）对象都有两个机器字（words）的头部。第一个字中包含这个对象的标示哈希码以及其他一些类似锁状态和对象分代年龄等标识信息，第二个字中包含一个指向对象的类的引用。</p>
+<h4 id="基本类型"><a href="#基本类型" class="headerlink" title="基本类型"></a>基本类型</h4><p>接下来实例数据部分是对象真正存储的有效信息，也既是我们在程序代码里面所定义的各种类型的字段内容，无论是从父类继承下来的，还是在子类中定义的。</p>
+<h4 id="引用类型"><a href="#引用类型" class="headerlink" title="引用类型"></a>引用类型</h4><p>每个引用类型占用 4 bytes</p>
+<h4 id="填充物"><a href="#填充物" class="headerlink" title="填充物"></a>填充物</h4><p>对齐填充并不是必然存在的，也没有特别的含义，它仅仅起着占位符的作用。由于HotSpot VM的自动内存管理系统要求对象起始地址必须是8字节的整数倍，换句话说就是对象的大小必须是8字节的整数倍。对象头部分正好似8字节的倍数（1倍或者2倍），因此当对象实例数据部分没有对齐的话，就需要通过对齐填充来补全。</p>
+<h3 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h3><ul>
+<li>一个空对象（没有声明任何变量）占用 8 bytes – &gt; 对象头 占用 8 bytes</li>
+<li>只声明了一个boolean类型变量的类，占用 16 bytes –&gt; 对象头(8 bytes) + boolean (1 bytes) + 填充物（7 bytes）</li>
+<li>声明了8个boolean类型变量的类，占用 16 bytes –&gt; 对象头(8 bytes) + boolean (1 bytes) * 8</li>
+</ul>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/object/">object</a></li></ul>
+
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2015/12/02/java-CAS/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">JAVA-CAS简介以及ABA问题</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2015/12/03/false-sharing/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">false-sharing问题(Cache line引起)</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2015/12/02/java-object-size/" data-title="java Object类占用内存大小计算" data-url="http://java.jr-jr.com/2015/12/02/java-object-size/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

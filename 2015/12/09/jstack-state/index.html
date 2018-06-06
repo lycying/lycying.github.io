@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>jstack线程dump输出状态解释 | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="执行jstack命令，将得到进程的堆栈信息。我一般使用jstack -l pid来得到长列表，显示其详细信息。有时线程挂起的时候，需要执行jstack -F pid来获取。 在实际运行中，往往一次 dump的信息，还不足以确认问题。建议产生三次 dump信息，如果每次 dump都指向同一个问题，我们才确定问题的典型性。堆栈信息只是一种参考，一些正常RUNNING的线程，由于复杂网络环境和IO的影响">
+<meta name="keywords" content="tools,shell">
+<meta property="og:type" content="article">
+<meta property="og:title" content="jstack线程dump输出状态解释">
+<meta property="og:url" content="http://java.jr-jr.com/2015/12/09/jstack-state/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="执行jstack命令，将得到进程的堆栈信息。我一般使用jstack -l pid来得到长列表，显示其详细信息。有时线程挂起的时候，需要执行jstack -F pid来获取。 在实际运行中，往往一次 dump的信息，还不足以确认问题。建议产生三次 dump信息，如果每次 dump都指向同一个问题，我们才确定问题的典型性。堆栈信息只是一种参考，一些正常RUNNING的线程，由于复杂网络环境和IO的影响">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://java.jr-jr.com/java-entry-set-wait-set.png">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.874Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="jstack线程dump输出状态解释">
+<meta name="twitter:description" content="执行jstack命令，将得到进程的堆栈信息。我一般使用jstack -l pid来得到长列表，显示其详细信息。有时线程挂起的时候，需要执行jstack -F pid来获取。 在实际运行中，往往一次 dump的信息，还不足以确认问题。建议产生三次 dump信息，如果每次 dump都指向同一个问题，我们才确定问题的典型性。堆栈信息只是一种参考，一些正常RUNNING的线程，由于复杂网络环境和IO的影响">
+<meta name="twitter:image" content="http://java.jr-jr.com/java-entry-set-wait-set.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-jstack-state" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      jstack线程dump输出状态解释
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2015/12/09/jstack-state/" class="article-date"><time datetime="2015-12-09T09:17:26.000Z" itemprop="datePublished">2015-12-09</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/中级/">中级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#线程的状态分析"><span class="toc-number">1.</span> <span class="toc-text">线程的状态分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Runnable"><span class="toc-number">2.</span> <span class="toc-text">Runnable</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Deadlock"><span class="toc-number">3.</span> <span class="toc-text">Deadlock</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Wait-on-condition"><span class="toc-number">4.</span> <span class="toc-text">Wait on condition</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Waiting-on-monitor-entry和Object-wait"><span class="toc-number">5.</span> <span class="toc-text">Waiting on monitor entry和Object.wait()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Blocked"><span class="toc-number">6.</span> <span class="toc-text">Blocked</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#关于concurrent的Lock"><span class="toc-number">7.</span> <span class="toc-text">关于concurrent的Lock</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#jstack解决CPU过高的问题"><span class="toc-number">8.</span> <span class="toc-text">jstack解决CPU过高的问题</span></a></li></ol>
+        <p>执行<code>jstack</code>命令，将得到进程的堆栈信息。我一般使用<code>jstack -l pid</code>来得到长列表，显示其详细信息。<br>有时线程挂起的时候，需要执行<code>jstack -F pid</code>来获取。</p>
+<div class="tip"><br>在实际运行中，往往一次 dump的信息，还不足以确认问题。建议产生三次 dump信息，如果每次 dump都指向同一个问题，我们才确定问题的典型性。<br><br>堆栈信息只是一种参考，一些正常RUNNING的线程，由于复杂网络环境和IO的影响，也是有问题的，用jstack就无法定位，需要结合对业务代码的理解。<br></div>
+
+<h3 id="线程的状态分析"><a href="#线程的状态分析" class="headerlink" title="线程的状态分析"></a>线程的状态分析</h3><p>线程的定义里，有状态：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">enum</span> State &#123;</span><br><span class="line">        NEW,</span><br><span class="line">        RUNNABLE,</span><br><span class="line">        BLOCKED,</span><br><span class="line">        WAITING,</span><br><span class="line">        TIMED_WAITING,</span><br><span class="line">        TERMINATED;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在dump 文件里，写法可能不太一样：</p>
+<ul>
+<li>死锁，Deadlock（重点关注）</li>
+<li>执行中，Runnable   </li>
+<li>等待资源，Waiting on condition（重点关注）</li>
+<li>等待获取监视器，Waiting on monitor entry（重点关注）</li>
+<li>对象等待中，Object.wait() 或 TIMED_WAITING</li>
+<li>暂停，Suspended</li>
+<li>阻塞，Blocked（重点关注）  </li>
+<li>停止，Parked</li>
+</ul>
+<h3 id="Runnable"><a href="#Runnable" class="headerlink" title="Runnable"></a>Runnable</h3><p>线程正在运行中。一般指该线程正在执行状态中，该线程占用了资源，正在处理某个请求，有可能正在传递SQL到数据库执行，有可能在对某个文件操作，有可能进行数据类型等转换。</p>
+<h3 id="Deadlock"><a href="#Deadlock" class="headerlink" title="Deadlock"></a>Deadlock</h3><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"t2"</span> prio=<span class="number">6</span> tid=<span class="number">0</span>x02bcf000 nid=<span class="number">0</span>xc70 waiting <span class="keyword">for</span> monitor entry [<span class="number">0</span>x02f6f000]  </span><br><span class="line">   java<span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: BLOCKED (on <span class="selector-tag">object</span> monitor)  </span><br><span class="line">    at com<span class="selector-class">.demo</span><span class="selector-class">.DeadLock</span>$<span class="number">2</span>.run(DeadLock<span class="selector-class">.java</span>:<span class="number">40</span>)  </span><br><span class="line">    - waiting to lock &lt;<span class="number">0</span>x22a297a8&gt; (<span class="selector-tag">a</span> java<span class="selector-class">.lang</span><span class="selector-class">.Object</span>)  </span><br><span class="line">    - locked &lt;<span class="number">0</span>x22a297b0&gt; (<span class="selector-tag">a</span> java<span class="selector-class">.lang</span><span class="selector-class">.Object</span>)  </span><br><span class="line">   Locked ownable synchronizers:  </span><br><span class="line">    - None    </span><br><span class="line"><span class="string">"t1"</span> prio=<span class="number">6</span> tid=<span class="number">0</span>x02bce400 nid=<span class="number">0</span>xba0 waiting <span class="keyword">for</span> monitor entry [<span class="number">0</span>x02f1f000]  </span><br><span class="line">   java<span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: BLOCKED (on <span class="selector-tag">object</span> monitor)  </span><br><span class="line">    at com<span class="selector-class">.demo</span><span class="selector-class">.DeadLock</span>$<span class="number">1</span>.run(DeadLock<span class="selector-class">.java</span>:<span class="number">25</span>)  </span><br><span class="line">    - waiting to lock &lt;<span class="number">0</span>x22a297b0&gt; (<span class="selector-tag">a</span> java<span class="selector-class">.lang</span><span class="selector-class">.Object</span>)  </span><br><span class="line">    - locked &lt;<span class="number">0</span>x22a297a8&gt; (<span class="selector-tag">a</span> java<span class="selector-class">.lang</span><span class="selector-class">.Object</span>)  </span><br><span class="line">   Locked ownable synchronizers:  </span><br><span class="line">    - None</span><br></pre></td></tr></table></figure>
+<p>上面是一个典型的死锁堆栈，t1线程lock在地址<code>0x22a297a8</code>，同时t2线程在<code>waiting to lock</code>这个地址。更有意思的是，堆栈也记录了发生死锁的代码行数，这对我们定位问题起到很大的帮助。</p>
+<h3 id="Wait-on-condition"><a href="#Wait-on-condition" class="headerlink" title="Wait on condition"></a>Wait on condition</h3><p><strong>等待资源，或等待某个条件的发生</strong>。具体原因需结合 stacktrace来分析。</p>
+<ul>
+<li><p>常见情况是该线程在 sleep，等待 sleep的时间到了时候，将被唤醒。关键字：<code>TIMED_WAITING</code>,<code>sleeping</code>,<code>parking</code>。TIMED_WAITING可能是调用了有超时参数的wait所引起的。parking指线程处于挂起中。<br>下面是一个典型的sleep引起的<code>Wait on condition</code>。</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"thread-1"</span> prio=<span class="number">10</span> tid=<span class="number">0</span>x00007fbe985cd000 nid=<span class="number">0</span>x7bc6 waiting on condition [<span class="number">0</span>x00007fbe65848000]</span><br><span class="line">  java<span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: TIMED_WAITING (sleeping)</span><br><span class="line">       at java<span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.sleep</span>(Native Method)</span><br><span class="line">       at com<span class="selector-class">.xxx</span><span class="selector-class">.MonitorManager</span>$<span class="number">2</span>.run(MonitorManager<span class="selector-class">.java</span>:<span class="number">124</span>)</span><br><span class="line">       at java<span class="selector-class">.util</span><span class="selector-class">.concurrent</span><span class="selector-class">.ThreadPoolExecutor</span><span class="variable">$Worker</span>.runTask(ThreadPoolExecutor<span class="selector-class">.java</span>:<span class="number">895</span>)</span><br><span class="line">       at java<span class="selector-class">.util</span><span class="selector-class">.concurrent</span><span class="selector-class">.ThreadPoolExecutor</span><span class="variable">$Worker</span>.run(ThreadPoolExecutor<span class="selector-class">.java</span>:<span class="number">918</span>)</span><br><span class="line">       at java<span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.run</span>(Thread<span class="selector-class">.java</span>:<span class="number">662</span>)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>如果发现有大量的线程都在处在 Wait on condition，从线程 stack看，正等待网络读写，这可能是一个网络瓶颈的征兆。因为网络阻塞导致线程无法执行。一种情况是网络非常忙，几乎消耗了所有的带宽，仍然有大量数据等待网络读 写；另一种情况也可能是网络空闲，但由于路由等问题，导致包无法正常的到达。可以结合其他网络分析工具定位问题。如下面的堆栈，线程等待在LinkedBlockingQueue上等待数据的生成。</p>
+</li>
+<li>如果堆栈信息明确是应用代码，则证明该线程正在等待资源。一般是大量读取某资源，且该资源采用了资源锁的情况下，线程进入等待状态，等待资源的读取。<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"IoWaitThread"</span> prio=<span class="number">6</span> tid=<span class="number">0</span>x0000000007334800 nid=<span class="number">0</span>x2b3c waiting on condition [<span class="number">0</span>x000000000893f000]</span><br><span class="line">   java<span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: WAITING (parking)</span><br><span class="line">        at sun<span class="selector-class">.misc</span><span class="selector-class">.Unsafe</span><span class="selector-class">.park</span>(Native Method)</span><br><span class="line">        - parking to wait <span class="keyword">for</span>  &lt;<span class="number">0</span>x00000007d5c45850&gt; (<span class="selector-tag">a</span> java<span class="selector-class">.util</span><span class="selector-class">.concurrent</span><span class="selector-class">.locks</span><span class="selector-class">.AbstractQueuedSynchronizer</span><span class="variable">$ConditionObject</span>)</span><br><span class="line">        at java<span class="selector-class">.util</span><span class="selector-class">.concurrent</span><span class="selector-class">.locks</span><span class="selector-class">.LockSupport</span><span class="selector-class">.park</span>(LockSupport<span class="selector-class">.java</span>:<span class="number">156</span>)</span><br><span class="line">        at java<span class="selector-class">.util</span><span class="selector-class">.concurrent</span><span class="selector-class">.locks</span><span class="selector-class">.AbstractQueuedSynchronizer</span><span class="variable">$ConditionObject</span>.await(AbstractQueuedSynchronizer<span class="selector-class">.java</span>:<span class="number">1987</span>)</span><br><span class="line">        at java<span class="selector-class">.util</span><span class="selector-class">.concurrent</span><span class="selector-class">.LinkedBlockingDeque</span><span class="selector-class">.takeFirst</span>(LinkedBlockingDeque<span class="selector-class">.java</span>:<span class="number">440</span>)</span><br><span class="line">        at java<span class="selector-class">.util</span><span class="selector-class">.concurrent</span><span class="selector-class">.LinkedBlockingDeque</span><span class="selector-class">.take</span>(LinkedBlockingDeque<span class="selector-class">.java</span>:<span class="number">629</span>)</span><br><span class="line">        at com<span class="selector-class">.xxx</span><span class="selector-class">.ThreadIoWaitState</span><span class="variable">$IoWaitHandler2</span>.run(ThreadIoWaitState<span class="selector-class">.java</span>:<span class="number">89</span>)</span><br><span class="line">        at java<span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.run</span>(Thread<span class="selector-class">.java</span>:<span class="number">662</span>)</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="Waiting-on-monitor-entry和Object-wait"><a href="#Waiting-on-monitor-entry和Object-wait" class="headerlink" title="Waiting on monitor entry和Object.wait()"></a>Waiting on monitor entry和Object.wait()</h3><p><strong>意味着线程在等待进入一个临界区</strong><br>Monitor是 Java中用以实现线程之间的互斥与协作的主要手段，它可以看成是对象或者 Class的锁。每一个对象都有，也仅有一个 monitor。<br><img src="/java-entry-set-wait-set.png" alt=""></p>
+<ul>
+<li>所有期待获得锁的线程，在锁已经被其它线程拥有的时候，这些期待获得锁的线程就进入了<code>Object Lock</code>的<code>entry set</code>区域。</li>
+<li>所有曾经获得过锁，但是由于其它必要条件不满足而需要wait的时候，线程就进入了<code>Object Lock</code>的<code>wait set</code>区域 。</li>
+<li>在<code>wait set</code>区域的线程获得<code>notify/notifyAll</code>通知的时候，随机的一个Thread（notify）或者是全部的Thread（notifyALL）从Object Lock的wait set区域进入了entry set中。</li>
+<li>在当前拥有锁的线程释放掉锁的时候，处于该<code>Object Lock</code>的<code>entryset</code>区域的线程都会抢占该锁，但是只能有任意的一个Thread能取得该锁，而其他线程依然在<code>entry set</code>中等待下次来抢占到锁之后再执行。</li>
+</ul>
+<p>看下面的堆栈，线程在等待数据库连接池返回一个可用的链接<br><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">" DB-Processor-13"</span> daemon prio=<span class="number">5</span> tid=<span class="number">0</span>x003edf98 nid=<span class="number">0</span>xca waiting <span class="keyword">for</span> monitor entry [<span class="number">0</span>x000000000825f000]</span><br><span class="line">java<span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: BLOCKED (on <span class="selector-tag">object</span> monitor)</span><br><span class="line">       at beans<span class="selector-class">.ConnectionPool</span><span class="selector-class">.getConnection</span>(ConnectionPool<span class="selector-class">.java</span>:<span class="number">102</span>)</span><br><span class="line">       - waiting to lock &lt;<span class="number">0</span>xe0375410&gt; (<span class="selector-tag">a</span> beans.ConnectionPool)</span><br><span class="line">       at xxx.getTodayCount(ServiceCnt<span class="selector-class">.java</span>:<span class="number">111</span>)</span><br><span class="line">       at xxx<span class="selector-class">.ServiceCnt</span><span class="selector-class">.insertCount</span>(ServiceCnt<span class="selector-class">.java</span>:<span class="number">43</span>)</span><br><span class="line"><span class="string">"DB-Processor-14"</span> daemon prio=<span class="number">5</span> tid=<span class="number">0</span>x003edf98 nid=<span class="number">0</span>xca waiting <span class="keyword">for</span> monitor entry [<span class="number">0</span>x000000000825f020]</span><br><span class="line">java<span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: BLOCKED (on <span class="selector-tag">object</span> monitor)</span><br><span class="line">       at beans<span class="selector-class">.ConnectionPool</span><span class="selector-class">.getConnection</span>(ConnectionPool<span class="selector-class">.java</span>:<span class="number">102</span>)</span><br><span class="line">       - waiting to lock &lt;<span class="number">0</span>xe0375410&gt; (<span class="selector-tag">a</span> beans.ConnectionPool)</span><br><span class="line">       at xxx<span class="selector-class">.ServiceCnt</span><span class="selector-class">.getTodayCount</span>(ServiceCnt<span class="selector-class">.java</span>:<span class="number">111</span>)</span><br><span class="line">       at xxx<span class="selector-class">.ServiceCnt</span><span class="selector-class">.insertCount</span>(ServiceCnt<span class="selector-class">.java</span>:<span class="number">43</span>)</span><br><span class="line"><span class="string">" DB-Processor-3"</span> daemon prio=<span class="number">5</span> tid=<span class="number">0</span>x00928248 nid=<span class="number">0</span>x8b waiting <span class="keyword">for</span> monitor entry [<span class="number">0</span>x000000000825d080]</span><br><span class="line">java<span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: RUNNABLE</span><br><span class="line">       at oracle<span class="selector-class">.jdbc</span><span class="selector-class">.driver</span><span class="selector-class">.OracleConnection</span><span class="selector-class">.isClosed</span>(OracleConnection<span class="selector-class">.java</span>:<span class="number">570</span>)</span><br><span class="line">       - waiting to lock &lt;<span class="number">0</span>xe03ba2e0&gt; (<span class="selector-tag">a</span> oracle<span class="selector-class">.jdbc</span><span class="selector-class">.driver</span><span class="selector-class">.OracleConnection</span>)</span><br><span class="line">       at beans<span class="selector-class">.ConnectionPool</span><span class="selector-class">.getConnection</span>(ConnectionPool<span class="selector-class">.java</span>:<span class="number">112</span>)</span><br><span class="line">       - locked &lt;<span class="number">0</span>xe0386580&gt; (<span class="selector-tag">a</span> java<span class="selector-class">.util</span><span class="selector-class">.Vector</span>)</span><br><span class="line">       - locked &lt;<span class="number">0</span>xe0375410&gt; (<span class="selector-tag">a</span> beans.ConnectionPool)</span><br><span class="line">       at xxx<span class="selector-class">.Cue_1700c</span><span class="selector-class">.GetNationList</span>(Cue_1700c<span class="selector-class">.java</span>:<span class="number">66</span>)</span><br><span class="line">       at org<span class="selector-class">.apache</span><span class="selector-class">.jsp</span><span class="selector-class">.cue_1700c_jsp</span>._jspService(cue_1700c_jsp<span class="selector-class">.java</span>:<span class="number">120</span>)</span><br></pre></td></tr></table></figure></p>
+<h3 id="Blocked"><a href="#Blocked" class="headerlink" title="Blocked"></a>Blocked</h3><p>线程阻塞，是指当前线程执行过程中，所需要的资源长时间等待却一直未能获取到，被容器的线程管理器标识为阻塞状态，可以理解为等待资源超时的线程。<br>如果线程处于Blocked状态，但是原因不清楚。可以使用<code>jstack -m pid</code>得到线程的mixed信息。<br><figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">----------------- t@<span class="number">13</span> -----------------</span><br><span class="line"><span class="number">0xff31e8b8</span>      ___lwp_cond_wait + <span class="number">0x4</span></span><br><span class="line"><span class="number">0xfea8c810</span>      <span class="literal">void</span> ObjectMonitor<span class="type">::EnterI</span>(<span class="keyword">Thread</span>*) + <span class="number">0x2b8</span></span><br><span class="line"><span class="number">0xfeac86b8</span>      <span class="literal">void</span> ObjectMonitor<span class="type">::enter2</span>(<span class="keyword">Thread</span>*) + <span class="number">0x250</span></span><br></pre></td></tr></table></figure></p>
+<p>例如，以上信息表明，线程在尝试进入同步块时阻塞了。</p>
+<h3 id="关于concurrent的Lock"><a href="#关于concurrent的Lock" class="headerlink" title="关于concurrent的Lock"></a>关于concurrent的Lock</h3><p>在JDK 5.0中，引入了<code>Lock</code>机制，从而使开发者能更灵活的开发高性能的并发多线程程序，可以替代以往JDK中的<code>synchronized</code>和<code>Monitor</code>的机制。但是，要注意的是，因为Lock类只是一个普通类，JVM无从得知Lock对象的占用情况，所以在线程DUMP中，也不会包含关于 Lock的信息，关于死锁等问题，就不如用 synchronized的编程方式容易识别。</p>
+<h3 id="jstack解决CPU过高的问题"><a href="#jstack解决CPU过高的问题" class="headerlink" title="jstack解决CPU过高的问题"></a>jstack解决CPU过高的问题</h3><blockquote>
+<p>第一步，找到占用cpu最高的一个线程<br>方法一：<code>top -p [pid]</code><br>方法二：<code>ps -mo spid,lwp,stime,time,%cpu -p [pid]</code><br>方法三：直接<code>top</code>,然后<code>shift+h</code><br>第二步，将其转化成16进制。假使我们得到的线程号为n，接下来将它转成16进制，记为spid<br>方法一：<code>echo &quot;obase=64;n&quot;|bc</code><br>方法二：<code>printf 0x%x n</code><br>下一步，执行<code>jstack -l  pid| grep spid -A 100</code> 打印后面100行分析问题</p>
+</blockquote>
+<p>下面便是一个查找的结果<br><figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"http-8081-11"</span> daemon prio=<span class="number">10</span> tid=<span class="number">0</span>x00002aab049a1800 nid=<span class="number">0</span>x52f1 <span class="keyword">in</span> Object.wait() [<span class="number">0</span>x0000000042c75000]  </span><br><span class="line">   java<span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: WAITING (on <span class="selector-tag">object</span> monitor)  </span><br><span class="line">     at java<span class="selector-class">.lang</span><span class="selector-class">.Object</span><span class="selector-class">.wait</span>(Native Method)  </span><br><span class="line">     at java<span class="selector-class">.lang</span><span class="selector-class">.Object</span><span class="selector-class">.wait</span>(Object<span class="selector-class">.java</span>:<span class="number">485</span>)  </span><br><span class="line">     at org<span class="selector-class">.apache</span><span class="selector-class">.tomcat</span><span class="selector-class">.util</span><span class="selector-class">.net</span><span class="selector-class">.JIoEndpoint</span><span class="variable">$Worker</span>.await(JIoEndpoint<span class="selector-class">.java</span>:<span class="number">416</span>)</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/shell/">shell</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tools/">tools</a></li></ul>
+
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2015/12/07/close-wait-time-wait/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">TIME_WAIT和CLOSE_WAIT解惑</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2015/12/10/java-reentrant-lock/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">java内置锁的可重入性</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2015/12/09/jstack-state/" data-title="jstack线程dump输出状态解释" data-url="http://java.jr-jr.com/2015/12/09/jstack-state/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

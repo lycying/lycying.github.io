@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>jstat详解 | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="jstat -gc pid可以显示gc的信息，查看gc的次数，及时间。其中最后五项，分别是young gc的次数，young gc的时间，full gc的次数，full gc的时间，gc的总时间。 jstat -gccapacity pid可以显示，VM内存中三代（young,old,perm）对象的使用和占用大小，如：PGCMN显示的是最小perm的内存使用量，PGCMX显示的是perm的内存最">
+<meta name="keywords" content="tools">
+<meta property="og:type" content="article">
+<meta property="og:title" content="jstat详解">
+<meta property="og:url" content="http://java.jr-jr.com/2015/12/02/jstat/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="jstat -gc pid可以显示gc的信息，查看gc的次数，及时间。其中最后五项，分别是young gc的次数，young gc的时间，full gc的次数，full gc的时间，gc的总时间。 jstat -gccapacity pid可以显示，VM内存中三代（young,old,perm）对象的使用和占用大小，如：PGCMN显示的是最小perm的内存使用量，PGCMX显示的是perm的内存最">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.874Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="jstat详解">
+<meta name="twitter:description" content="jstat -gc pid可以显示gc的信息，查看gc的次数，及时间。其中最后五项，分别是young gc的次数，young gc的时间，full gc的次数，full gc的时间，gc的总时间。 jstat -gccapacity pid可以显示，VM内存中三代（young,old,perm）对象的使用和占用大小，如：PGCMN显示的是最小perm的内存使用量，PGCMX显示的是perm的内存最">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-jstat" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      jstat详解
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2015/12/02/jstat/" class="article-date"><time datetime="2015-12-02T03:31:31.000Z" itemprop="datePublished">2015-12-02</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/中级/">中级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#jstat-gc-pid"><span class="toc-number">1.</span> <span class="toc-text">jstat -gc pid</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#jstat-gccapacity-pid"><span class="toc-number">2.</span> <span class="toc-text">jstat -gccapacity pid</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#jstat-gcutil-pid"><span class="toc-number">3.</span> <span class="toc-text">jstat -gcutil pid</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#jstat-gcnew-pid"><span class="toc-number">4.</span> <span class="toc-text">jstat -gcnew pid</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#jstat-gcnewcapacity-pid"><span class="toc-number">5.</span> <span class="toc-text">jstat -gcnewcapacity pid</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#jstat-gcold-pid"><span class="toc-number">6.</span> <span class="toc-text">jstat -gcold pid</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#jstat-gcoldcapacity-pid"><span class="toc-number">7.</span> <span class="toc-text">jstat -gcoldcapacity pid</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#jstat-gcpermcapacity-pid"><span class="toc-number">8.</span> <span class="toc-text">jstat -gcpermcapacity pid</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#jstat-class-pid"><span class="toc-number">9.</span> <span class="toc-text">jstat -class pid</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#jstat-compiler-pid"><span class="toc-number">10.</span> <span class="toc-text">jstat -compiler pid</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#jstat-printcompilation-pid"><span class="toc-number">11.</span> <span class="toc-text">jstat -printcompilation pid</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#一些术语的中文解释"><span class="toc-number">12.</span> <span class="toc-text">一些术语的中文解释</span></a></li></ol>
+        <h4 id="jstat-gc-pid"><a href="#jstat-gc-pid" class="headerlink" title="jstat -gc pid"></a>jstat -gc pid</h4><p>可以显示gc的信息，查看gc的次数，及时间。<br>其中最后五项，分别是young gc的次数，young gc的时间，full gc的次数，full gc的时间，gc的总时间。</p>
+<h4 id="jstat-gccapacity-pid"><a href="#jstat-gccapacity-pid" class="headerlink" title="jstat -gccapacity pid"></a>jstat -gccapacity pid</h4><p>可以显示，VM内存中三代（young,old,perm）对象的使用和占用大小，<br>如：PGCMN显示的是最小perm的内存使用量，PGCMX显示的是perm的内存最大使用量，<br>PGC是当前新生成的perm内存占用量，PC是但前perm内存占用量。<br>其他的可以根据这个类推， OC是old内纯的占用量。</p>
+<h4 id="jstat-gcutil-pid"><a href="#jstat-gcutil-pid" class="headerlink" title="jstat -gcutil pid"></a>jstat -gcutil pid</h4><p>统计gc信息统计。</p>
+<h4 id="jstat-gcnew-pid"><a href="#jstat-gcnew-pid" class="headerlink" title="jstat -gcnew pid"></a>jstat -gcnew pid</h4><p>年轻代对象的信息。</p>
+<h4 id="jstat-gcnewcapacity-pid"><a href="#jstat-gcnewcapacity-pid" class="headerlink" title="jstat -gcnewcapacity pid"></a>jstat -gcnewcapacity pid</h4><p>年轻代对象的信息及其占用量。</p>
+<h4 id="jstat-gcold-pid"><a href="#jstat-gcold-pid" class="headerlink" title="jstat -gcold pid"></a>jstat -gcold pid</h4><p>old代对象的信息。</p>
+<h4 id="jstat-gcoldcapacity-pid"><a href="#jstat-gcoldcapacity-pid" class="headerlink" title="jstat -gcoldcapacity pid"></a>jstat -gcoldcapacity pid</h4><p>old代对象的信息及其占用量。</p>
+<h4 id="jstat-gcpermcapacity-pid"><a href="#jstat-gcpermcapacity-pid" class="headerlink" title="jstat -gcpermcapacity pid"></a>jstat -gcpermcapacity pid</h4><p>perm对象的信息及其占用量。</p>
+<h4 id="jstat-class-pid"><a href="#jstat-class-pid" class="headerlink" title="jstat -class pid"></a>jstat -class pid</h4><p>显示加载class的数量，及所占空间等信息。</p>
+<h4 id="jstat-compiler-pid"><a href="#jstat-compiler-pid" class="headerlink" title="jstat -compiler pid"></a>jstat -compiler pid</h4><p>显示VM实时编译的数量等信息。</p>
+<h4 id="jstat-printcompilation-pid"><a href="#jstat-printcompilation-pid" class="headerlink" title="jstat -printcompilation pid"></a>jstat -printcompilation pid</h4><p>当前VM执行的信息。</p>
+<h4 id="一些术语的中文解释"><a href="#一些术语的中文解释" class="headerlink" title="一些术语的中文解释"></a>一些术语的中文解释</h4><ul>
+<li><code>S0C</code>：年轻代中第一个survivor（幸存区）的容量 (字节)</li>
+<li><code>S1C</code>：年轻代中第二个survivor（幸存区）的容量 (字节)</li>
+<li><code>S0U</code>：年轻代中第一个survivor（幸存区）目前已使用空间 (字节)</li>
+<li><code>S1U</code>：年轻代中第二个survivor（幸存区）目前已使用空间 (字节)</li>
+<li><code>EC</code>：年轻代中Eden（伊甸园）的容量 (字节)</li>
+<li><code>EU</code>：年轻代中Eden（伊甸园）目前已使用空间 (字节)</li>
+<li><code>OC</code>：Old代的容量 (字节)</li>
+<li><code>OU</code>：Old代目前已使用空间 (字节)</li>
+<li><code>PC</code>：Perm(持久代)的容量 (字节)</li>
+<li><code>PU</code>：Perm(持久代)目前已使用空间 (字节)</li>
+<li><code>YGC</code>：从应用程序启动到采样时年轻代中gc次数</li>
+<li><code>YGCT</code>：从应用程序启动到采样时年轻代中gc所用时间(s)</li>
+<li><code>FGC</code>：从应用程序启动到采样时old代(全gc)gc次数</li>
+<li><code>FGCT</code>：从应用程序启动到采样时old代(全gc)gc所用时间(s)</li>
+<li><code>GCT</code>：从应用程序启动到采样时gc用的总时间(s)</li>
+<li><code>NGCMN</code>：年轻代(young)中初始化(最小)的大小 (字节)</li>
+<li><code>NGCMX</code>：年轻代(young)的最大容量 (字节)</li>
+<li><code>NGC</code>：年轻代(young)中当前的容量 (字节)</li>
+<li><code>OGCMN</code>：old代中初始化(最小)的大小 (字节)</li>
+<li><code>OGCMX</code>：old代的最大容量 (字节)</li>
+<li><code>OGC</code>：old代当前新生成的容量 (字节)</li>
+<li><code>PGCMN</code>：perm代中初始化(最小)的大小 (字节)</li>
+<li><code>PGCMX</code>：perm代的最大容量 (字节)   </li>
+<li><code>PGC</code>：perm代当前新生成的容量 (字节)</li>
+<li><code>S0</code>：年轻代中第一个survivor（幸存区）已使用的占当前容量百分比</li>
+<li><code>S1</code>：年轻代中第二个survivor（幸存区）已使用的占当前容量百分比</li>
+<li><code>E</code>：年轻代中Eden（伊甸园）已使用的占当前容量百分比</li>
+<li><code>O</code>：old代已使用的占当前容量百分比</li>
+<li><code>P</code>：perm代已使用的占当前容量百分比</li>
+<li><code>S0CMX</code>：年轻代中第一个survivor（幸存区）的最大容量 (字节)</li>
+<li><code>S1CMX</code> ：年轻代中第二个survivor（幸存区）的最大容量 (字节)</li>
+<li><code>ECMX</code>：年轻代中Eden（伊甸园）的最大容量 (字节)</li>
+<li><code>DSS</code>：当前需要survivor（幸存区）的容量 (字节)（Eden区已满）</li>
+<li><code>TT</code>： 持有次数限制</li>
+<li><code>MTT</code>： 最大持有次数限制</li>
+</ul>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tools/">tools</a></li></ul>
+
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2015/12/01/level3-other/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">java高级：其他</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2015/12/02/java-CAS/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">JAVA-CAS简介以及ABA问题</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2015/12/02/jstat/" data-title="jstat详解" data-url="http://java.jr-jr.com/2015/12/02/jstat/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

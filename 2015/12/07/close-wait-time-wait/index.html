@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>TIME_WAIT和CLOSE_WAIT解惑 | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="网络状态的获取Java程序员大多数要与各种网络状态打交道，来处理各种高并发情况下发生的奇怪的问题。其中，TIME_WAIT和CLOSE_WAIT状态是经常碰到问题的状态。但我发现在实际工作中，很少人能定位到此类问题的真正原因。相对于TIME_WAIT，CLOSE_WAIT状态的出现更有可能是程序的BUG引起的。TIME_WAIT的问题需要调整系统参数，但CLOSE_WAIT的出现需要定位代码。 如">
+<meta name="keywords" content="net">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TIME_WAIT和CLOSE_WAIT解惑">
+<meta property="og:url" content="http://java.jr-jr.com/2015/12/07/close-wait-time-wait/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="网络状态的获取Java程序员大多数要与各种网络状态打交道，来处理各种高并发情况下发生的奇怪的问题。其中，TIME_WAIT和CLOSE_WAIT状态是经常碰到问题的状态。但我发现在实际工作中，很少人能定位到此类问题的真正原因。相对于TIME_WAIT，CLOSE_WAIT状态的出现更有可能是程序的BUG引起的。TIME_WAIT的问题需要调整系统参数，但CLOSE_WAIT的出现需要定位代码。 如">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://java.jr-jr.com/tcp_close.gif">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.868Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="TIME_WAIT和CLOSE_WAIT解惑">
+<meta name="twitter:description" content="网络状态的获取Java程序员大多数要与各种网络状态打交道，来处理各种高并发情况下发生的奇怪的问题。其中，TIME_WAIT和CLOSE_WAIT状态是经常碰到问题的状态。但我发现在实际工作中，很少人能定位到此类问题的真正原因。相对于TIME_WAIT，CLOSE_WAIT状态的出现更有可能是程序的BUG引起的。TIME_WAIT的问题需要调整系统参数，但CLOSE_WAIT的出现需要定位代码。 如">
+<meta name="twitter:image" content="http://java.jr-jr.com/tcp_close.gif">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-close-wait-time-wait" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      TIME_WAIT和CLOSE_WAIT解惑
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2015/12/07/close-wait-time-wait/" class="article-date"><time datetime="2015-12-07T14:57:39.000Z" itemprop="datePublished">2015-12-07</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/中级/">中级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#网络状态的获取"><span class="toc-number">1.</span> <span class="toc-text">网络状态的获取</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#系统保持了大量的CLOSE-WAIT状态"><span class="toc-number">2.</span> <span class="toc-text">系统保持了大量的CLOSE_WAIT状态</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#系统保持了大量的TIME-WAIT状态"><span class="toc-number">3.</span> <span class="toc-text">系统保持了大量的TIME_WAIT状态</span></a></li></ol>
+        <h4 id="网络状态的获取"><a href="#网络状态的获取" class="headerlink" title="网络状态的获取"></a>网络状态的获取</h4><p>Java程序员大多数要与各种网络状态打交道，来处理各种高并发情况下发生的奇怪的问题。其中，TIME_WAIT和CLOSE_WAIT状态是经常碰到问题的状态。但我发现在实际工作中，很少人能定位到此类问题的真正原因。相对于TIME_WAIT，CLOSE_WAIT状态的出现更有可能是程序的BUG引起的。TIME_WAIT的问题需要调整系统参数，但CLOSE_WAIT的出现需要定位代码。</p>
+<p>如下代码可以看到系统处于各种网络状态的状态数量。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -n | awk <span class="string">'/^tcp/ &#123;++S[$NF]&#125; END &#123;for(a in S) print a, S[a]&#125;'</span></span><br></pre></td></tr></table></figure></p>
+<p>可能会得到以下结果：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">TIME_WAIT 18140</span><br><span class="line">CLOSE_WAIT 2882</span><br><span class="line">FIN_WAIT1 1</span><br><span class="line">ESTABLISHED 19829</span><br><span class="line">SYN_RECV 2</span><br><span class="line">LAST_ACK 1</span><br></pre></td></tr></table></figure></p>
+<p>关于系统状态的含义，请参见<a href="/2015/12/07/tcp-ip-state/">TCP/IP状态含义</a>，我们这里只关注TIME_WAIT和CLOSE_WAIT，<strong>TIME_WAIT 表示主动关闭，CLOSE_WAIT 表示被动关</strong>。</p>
+<p>Linux的文件句柄是有限的，如果一些状态保持着不消失，将逐渐的耗尽句柄资源，新的连接将直接拒绝，造成异常。</p>
+<h4 id="系统保持了大量的CLOSE-WAIT状态"><a href="#系统保持了大量的CLOSE-WAIT状态" class="headerlink" title="系统保持了大量的CLOSE_WAIT状态"></a>系统保持了大量的CLOSE_WAIT状态</h4><p>把CLOSE_WAIT放在前面的原因是，出现此状态的原因很可能是程序有问题，根本问题还是程序写的不好，有待提高。<br><img src="/tcp_close.gif" alt=""></p>
+<p>从上面的图可以看出来，如果一直保持在CLOSE_WAIT状态，那么只有一种情况，就是在<strong>对方关闭连接之后服务器程序自己没有进一步发出ack信号</strong>。换句话说，就是在对方连接关闭之后，程序里没有检测到，或者程序压根就忘记了这个时候需要关闭连接，于是这个资源就一直被程序占着。</p>
+<p>拿HttpClient来说，<a href="http://blog.csdn.net/shootyou/article/details/6615051" target="_blank" rel="noopener">更详细的分析</a>：<br><figure class="highlight haxe"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">	client = HttpConnectionManager.getHttpClient();</span><br><span class="line">	HttpGet <span class="keyword">get</span> = <span class="keyword">new</span> <span class="type">HttpGet</span>();</span><br><span class="line">	<span class="keyword">get</span>.setURI(<span class="keyword">new</span> <span class="type">URI</span>(urlPath));</span><br><span class="line">	HttpResponse response = client.execute(<span class="keyword">get</span>);</span><br><span class="line">	<span class="keyword">if</span> (response.getStatusLine ().getStatusCode () != <span class="number">200</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	HttpEntity entity =response.getEntity();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span>( entity != <span class="literal">null</span> )&#123;</span><br><span class="line">		<span class="keyword">in</span> = entity.getContent();</span><br><span class="line">		.....</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sb.toString ();</span><br><span class="line">&#125; <span class="keyword">catch</span> (Exception e) &#123; 	<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125; finally &#123;</span><br><span class="line">	<span class="keyword">if</span> (isr != <span class="literal">null</span>)&#123;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			isr.close ();</span><br><span class="line">		&#125; <span class="keyword">catch</span> (IOException e) &#123; e.printStackTrace (); &#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (<span class="keyword">in</span> != <span class="literal">null</span>)&#123;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="keyword">in</span>.close();</span><br><span class="line">		&#125; <span class="keyword">catch</span> (IOException e) &#123; e.printStackTrace (); &#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>HttpClient使用我们常用的<code>InputStream.close()</code>来确认连接关闭，分析上面的代码，一旦出现<code>非200</code>的连接，这个连接将永远僵死在连接池里头，因为inputStream得不到初始化，永远不会调用close()方法了。<br>正确方法是调用<code>HttpGet</code>的<code>abort()</code>方法来终止连接。</p>
+<p><div class="tip">一句话，出现了大量CLOSE_WAIT状态，检查下你的代码。</div></p>
+<h4 id="系统保持了大量的TIME-WAIT状态"><a href="#系统保持了大量的TIME-WAIT状态" class="headerlink" title="系统保持了大量的TIME_WAIT状态"></a>系统保持了大量的TIME_WAIT状态</h4><p>上面说到TIME_WAIT是主动关闭。什么叫主动关闭呢？就是假如我们建立了一个链接，读取完数据之后，就会发起主动关闭连接。进入TIME_WAIT的状态，然后在保持这个状态2MSL（<code>max segment lifetime</code>）。MSL的值在一般的实现中取30s，有些实现采用2分钟。为什么还要等上一段时间呢？虽然双方都同意关闭连接了，而且握手的4个报文也都协调和发送完毕，按理可以直接回到CLOSED状态（就好比从SYN_SEND状态到ESTABLISH状态那样）；但是因为我们必须要假想网络是不可靠的，你无法保证你最后发送的ACK报文会一定被对方收到，因此对方处于LAST_ACK状态下的SOCKET可能会因为超时未收到ACK报文，而重发FIN报文，所以这个TIME_WAIT状态的作用就是用来重发可能丢失的ACK报文，并保证于此。</p>
+<blockquote>
+<p>TCP下每条连接都有一个属性叫做max segment lifetime，就是说该连接关闭后，要经过2*max segment lifetime的时间，才算是真正的被关闭，才能被重新建立，以防止这条链路上还有东西在传输。</p>
+</blockquote>
+<p>这种情况一般发生在频繁开启和关闭连接的应用中。比如：</p>
+<ul>
+<li>使用反向代理Nginx</li>
+<li>有类似爬虫的程序在频繁开启关闭连接</li>
+<li>某些频繁读写的WEB服务器</li>
+<li>短时间内接受大量请求或者受到攻击</li>
+</ul>
+<p>解决方式：<br>修改<code>/etc/sysctl.conf</code>文件：<br>在这个文件中，加入下面的几行内容：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">net.ipv4.tcp_syncookies = 1</span><br><span class="line"> <span class="comment">#表示开启SYN Cookies。当出现SYN等待队列溢出时，启用cookies来处理，可防范少量SYN攻击，默认为0，表示关闭；</span></span><br><span class="line">net.ipv4.tcp_tw_reuse = 1</span><br><span class="line"> <span class="comment">#表示开启重用。允许将TIME-WAIT sockets重新用于新的TCP连接，默认为0，表示关闭；</span></span><br><span class="line">net.ipv4.tcp_tw_recycle = 1</span><br><span class="line"> <span class="comment">#表示开启TCP连接中TIME-WAIT sockets的快速回收，默认为0，表示关闭；</span></span><br><span class="line">net.ipv4.tcp_fin_timeout = 5</span><br><span class="line"> <span class="comment">#修改系统默认的 TIMEOUT 时间;</span></span><br></pre></td></tr></table></figure></p>
+<p>此外，如果你的连接数本身就很多，我们可以再优化一下<code>TCP/IP</code>的可使用端口范围，进一步提升服务器的并发能力。依然是往上面的参数文件中，加入下面这些配置：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">net.ipv4.tcp_keepalive_time = 1200</span><br><span class="line"> <span class="comment">#当keepalive起用的时候，TCP发送keepalive消息的频度。缺省是2小时，改为20分钟。</span></span><br><span class="line">net.ipv4.ip_local_port_range = 10000 65000</span><br><span class="line"> <span class="comment">#用于向外连接的端口范围。缺省情况下很小：32768到61000，改为10000到65000。(注意：这里不要将最低值设的太低，否则可能会占用掉正常的端口！)</span></span><br><span class="line">net.ipv4.tcp_max_syn_backlog = 8192</span><br><span class="line"> <span class="comment">#表示SYN队列的长度，默认为1024，加大队列长度为8192，可以容纳更多等待连接的网络连接数。</span></span><br><span class="line">net.ipv4.tcp_max_tw_buckets = 5000</span><br><span class="line"> <span class="comment">#表示系统同时保持TIME_WAIT的最大数量，如果超过这个数字，TIME_WAIT将立刻被清除并打印警告信息。默认为180000，改为5000。</span></span><br><span class="line"> <span class="comment">#对于Apache、Nginx等服务器，上几行的参数可以很好地减少TIME_WAIT套接字数量，但是对于 Squid，效果却不大。</span></span><br><span class="line"> <span class="comment">#此项参数可以控制TIME_WAIT的最大数量，避免Squid服务器被大量的TIME_WAIT拖死。</span></span><br></pre></td></tr></table></figure></p>
+<p>这几个参数，建议只在流量非常大的服务器上开启，会有显著的效果。一般的流量小的服务器上，没有必要去设置这几个参数。</p>
+<p>运行 <code>/sbin/sysctl -p</code> 使配置生效.</p>
+<p>扩展阅读<br><a href="http://blog.miniasp.com/post/2010/11/17/How-to-deal-with-TIME_WAIT-problem-under-Windows.aspx" target="_blank" rel="noopener">在 Windows 上遇到非常多 TIME_WAIT 連線時應如何處理</a><br><a href="http://blog.csdn.net/chinalinuxzend/article/details/1792184" target="_blank" rel="noopener">linux服务器历险之sysctl优化linux网络</a></p>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/net/">net</a></li></ul>
+
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2015/12/07/tcp-ip-state/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">TCP/IP的各种状态</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2015/12/09/jstack-state/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">jstack线程dump输出状态解释</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2015/12/07/close-wait-time-wait/" data-title="TIME_WAIT和CLOSE_WAIT解惑" data-url="http://java.jr-jr.com/2015/12/07/close-wait-time-wait/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

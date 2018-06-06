@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>http://java.jr-jr.com/2016/07/03/thread-basic/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.885Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/07/tcp-ip-state/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.884Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/31/redis-vvv/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2016/07/08/numa-linux/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.882Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2016/05/03/ps-state/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.882Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2016/06/04/linux-overview/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.881Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2016/04/07/lru/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.881Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level3-other/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.880Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2016/07/03/linux-cache-free/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.880Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level3-thread/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.880Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level3-object/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.879Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level2-thread/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.879Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level3-network/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.879Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level3-linux/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.879Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level3-distributed/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.879Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level3-io/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.879Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level2-network/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.878Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level2-other/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.878Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level2-object/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.878Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level2-linux/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.877Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level1-thread/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.876Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level2-io/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.876Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level2-jvm/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.876Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level1-linux/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.875Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level1-other/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.875Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level1-network/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.875Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level1-object/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.875Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/02/jstat/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.874Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/10/java-reentrant-lock/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.874Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/05/java-wait-notify-sync/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.874Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/01/level1-io/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.874Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/09/jstack-state/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.874Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2016/07/03/java-hashmap-loop/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.873Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2016/04/06/java-long-concurrent/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.873Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/02/java-object-size/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.873Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/03/java-cms/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.872Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2016/07/03/java-bit/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.872Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/02/java-CAS/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.872Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/10/io-nio/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.871Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/04/interrupt/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.871Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/11/30/getstart/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.871Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/03/false-sharing/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.870Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/05/design-pattern/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.870Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/03/crontab/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.869Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/07/close-wait-time-wait/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.868Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://java.jr-jr.com/2015/12/04/context-switch/</loc>
+    
+    <lastmod>2018-06-06T08:31:42.868Z</lastmod>
+    
+  </url>
+  
+</urlset>

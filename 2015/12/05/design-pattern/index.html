@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>设计模式(Design Pattern) | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="简单工厂Simple Factory，是由一个工厂对象决定创建出哪一种产品类的实例，是工厂模式家族中最简单实用的模式。 工厂方法Factory Method，定义一个用于创建对象的接口，让子类决定实例化哪一个类，工厂方法使一个类的实例化延迟到其子类。为了遵循扩展开放，修改关闭原则，将简单工厂类转换为工厂方法接口，将其Switch分支分离成子类去继承工厂方法接口类，顺利的将创建对象的过程延迟到子类。">
+<meta name="keywords" content="arch">
+<meta property="og:type" content="article">
+<meta property="og:title" content="设计模式(Design Pattern)">
+<meta property="og:url" content="http://java.jr-jr.com/2015/12/05/design-pattern/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="简单工厂Simple Factory，是由一个工厂对象决定创建出哪一种产品类的实例，是工厂模式家族中最简单实用的模式。 工厂方法Factory Method，定义一个用于创建对象的接口，让子类决定实例化哪一个类，工厂方法使一个类的实例化延迟到其子类。为了遵循扩展开放，修改关闭原则，将简单工厂类转换为工厂方法接口，将其Switch分支分离成子类去继承工厂方法接口类，顺利的将创建对象的过程延迟到子类。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.870Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="设计模式(Design Pattern)">
+<meta name="twitter:description" content="简单工厂Simple Factory，是由一个工厂对象决定创建出哪一种产品类的实例，是工厂模式家族中最简单实用的模式。 工厂方法Factory Method，定义一个用于创建对象的接口，让子类决定实例化哪一个类，工厂方法使一个类的实例化延迟到其子类。为了遵循扩展开放，修改关闭原则，将简单工厂类转换为工厂方法接口，将其Switch分支分离成子类去继承工厂方法接口类，顺利的将创建对象的过程延迟到子类。">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-design-pattern" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      设计模式(Design Pattern)
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2015/12/05/design-pattern/" class="article-date"><time datetime="2015-12-05T08:38:58.000Z" itemprop="datePublished">2015-12-05</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/中级/">中级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#简单工厂"><span class="toc-number">1.</span> <span class="toc-text">简单工厂</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#工厂方法"><span class="toc-number">2.</span> <span class="toc-text">工厂方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#抽象工厂"><span class="toc-number">3.</span> <span class="toc-text">抽象工厂</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#原型模式（Prototype）"><span class="toc-number">4.</span> <span class="toc-text">原型模式（Prototype）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#建造者（Builder）"><span class="toc-number">5.</span> <span class="toc-text">建造者（Builder）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#单例（Singleton"><span class="toc-number">6.</span> <span class="toc-text">单例（Singleton)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Adapter"><span class="toc-number">7.</span> <span class="toc-text">Adapter</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Proxy"><span class="toc-number">8.</span> <span class="toc-text">Proxy</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Composite"><span class="toc-number">9.</span> <span class="toc-text">Composite</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Bridge"><span class="toc-number">10.</span> <span class="toc-text">Bridge</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#flyweight"><span class="toc-number">11.</span> <span class="toc-text">flyweight</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Facade"><span class="toc-number">12.</span> <span class="toc-text">Facade</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Decorator"><span class="toc-number">13.</span> <span class="toc-text">Decorator</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Memento"><span class="toc-number">14.</span> <span class="toc-text">Memento</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Command"><span class="toc-number">15.</span> <span class="toc-text">Command</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#策略（Strategy）"><span class="toc-number">16.</span> <span class="toc-text">策略（Strategy）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#模板方法（TemplateMethod）"><span class="toc-number">17.</span> <span class="toc-text">模板方法（TemplateMethod）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#观察者（Observer）"><span class="toc-number">18.</span> <span class="toc-text">观察者（Observer）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#迭代器（Iterator）"><span class="toc-number">19.</span> <span class="toc-text">迭代器（Iterator）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#职责链（Chain-of-Responsibility"><span class="toc-number">20.</span> <span class="toc-text">职责链（Chain of Responsibility)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#中介者-Mediator"><span class="toc-number">21.</span> <span class="toc-text">中介者(Mediator)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#状态-State"><span class="toc-number">22.</span> <span class="toc-text">状态(State)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#访问者（Visitor）"><span class="toc-number">23.</span> <span class="toc-text">访问者（Visitor）</span></a></li></ol>
+        <h3 id="简单工厂"><a href="#简单工厂" class="headerlink" title="简单工厂"></a>简单工厂</h3><p>Simple Factory，是由一个工厂对象决定创建出哪一种产品类的实例，是工厂模式家族中最简单实用的模式。</p>
+<h3 id="工厂方法"><a href="#工厂方法" class="headerlink" title="工厂方法"></a>工厂方法</h3><p>Factory Method，定义一个用于创建对象的接口，让子类决定实例化哪一个类，工厂方法使一个类的实例化延迟到其子类。为了遵循扩展开放，修改关闭原则，将简单工厂类转换为工厂方法接口，将其Switch分支分离成子类去继承工厂方法接口类，顺利的将创建对象的过程延迟到子类。</p>
+<h3 id="抽象工厂"><a href="#抽象工厂" class="headerlink" title="抽象工厂"></a>抽象工厂</h3><p>Abstract Factory，提供一个创建一系列相关或相互依赖对象的接口，而无需指定他们具体的类。</p>
+<h3 id="原型模式（Prototype）"><a href="#原型模式（Prototype）" class="headerlink" title="原型模式（Prototype）"></a>原型模式（Prototype）</h3><p>用原型实例指定创建对象的种类，并且通过拷贝这些原型创建新的对象。</p>
+<h3 id="建造者（Builder）"><a href="#建造者（Builder）" class="headerlink" title="建造者（Builder）"></a>建造者（Builder）</h3><p>将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。</p>
+<h3 id="单例（Singleton"><a href="#单例（Singleton" class="headerlink" title="单例（Singleton)"></a>单例（Singleton)</h3><p>保证一个类仅有一个实例，并提供一个访问它的全局访问点</p>
+<h3 id="Adapter"><a href="#Adapter" class="headerlink" title="Adapter"></a>Adapter</h3><p>将一个类的接口转换为客户希望的另一个接口，Adapter模式使得原本由于接口不兼容而不能一起工作的那些类一起工作。</p>
+<h3 id="Proxy"><a href="#Proxy" class="headerlink" title="Proxy"></a>Proxy</h3><p>为其他对象提供一种代理以控制对这个对象的访问。</p>
+<h3 id="Composite"><a href="#Composite" class="headerlink" title="Composite"></a>Composite</h3><p>将对象组合成树形结构以表示“部分——整体”的层次结构，组合模式使得用户对单个对象和组合对象的使用具有一致性。</p>
+<h3 id="Bridge"><a href="#Bridge" class="headerlink" title="Bridge"></a>Bridge</h3><p>将抽象部分与它的实现部分分离，使它们都可以独立地变化。</p>
+<h3 id="flyweight"><a href="#flyweight" class="headerlink" title="flyweight"></a>flyweight</h3><p>运用共享技术有效的支持大量细粒度的对象。</p>
+<h3 id="Facade"><a href="#Facade" class="headerlink" title="Facade"></a>Facade</h3><p>为子系统中的一组接口提供一个一致的界面，此模式定义了一个高层接口，这个接口使得这一子系统更加容易使用。</p>
+<h3 id="Decorator"><a href="#Decorator" class="headerlink" title="Decorator"></a>Decorator</h3><p>动态的给一个对象添加额外的职责，就增加功能来说，装饰模式比生成子类更为灵活。</p>
+<h3 id="Memento"><a href="#Memento" class="headerlink" title="Memento"></a>Memento</h3><p>在不破坏封装性的前提下，捕获一个对象的内部状态，并在该对象之外保存这个状态。这样以后就可以将对象恢复到原先保存的状态</p>
+<h3 id="Command"><a href="#Command" class="headerlink" title="Command"></a>Command</h3><p>将一个请求封装为一个对象，从而使你可用不同的请求对客户进行参数化，对请求排队或记录请求日志，以及支持可撤销的操作。</p>
+<h3 id="策略（Strategy）"><a href="#策略（Strategy）" class="headerlink" title="策略（Strategy）"></a>策略（Strategy）</h3><p>它定义了算法家族，分别封装起来，让它们之间可以互相替换，此模式让算法的变化，不会影响到使用算法的客户。</p>
+<h3 id="模板方法（TemplateMethod）"><a href="#模板方法（TemplateMethod）" class="headerlink" title="模板方法（TemplateMethod）"></a>模板方法（TemplateMethod）</h3><p>定义一个操作中的算法的骨架，而将一些步骤延迟到子类中。模板方法使得子类可以不改变一个算法的结构即可重定义该算法的某些特定步骤。</p>
+<h3 id="观察者（Observer）"><a href="#观察者（Observer）" class="headerlink" title="观察者（Observer）"></a>观察者（Observer）</h3><p>定义了一种一对多的依赖关系，让多个观察者对象同时监听某一个主题对象。这个主题对象在状态发生变化时，会通知所有观察者对象，使它们能够自动更新自己。</p>
+<h3 id="迭代器（Iterator）"><a href="#迭代器（Iterator）" class="headerlink" title="迭代器（Iterator）"></a>迭代器（Iterator）</h3><p>提供一种方法顺序访问一个聚合对象中各个元素，而又不暴露该对象的内部表示。</p>
+<h3 id="职责链（Chain-of-Responsibility"><a href="#职责链（Chain-of-Responsibility" class="headerlink" title="职责链（Chain of Responsibility)"></a>职责链（Chain of Responsibility)</h3><p>使多个对象都有机会处理请求，从而避免请求的发送者和接受者之间的耦合关系。将这个对象连成一条链，并沿着这条链传递该请求，知道有一个对处理它为止。</p>
+<h3 id="中介者-Mediator"><a href="#中介者-Mediator" class="headerlink" title="中介者(Mediator)"></a>中介者(Mediator)</h3><p>用一个中介者对象来封装一系列的对象交互。中介者使各对象不需要显示地相互引用，从而使其耦合松散，而且可以独立地改变它们之间的关系</p>
+<h3 id="状态-State"><a href="#状态-State" class="headerlink" title="状态(State)"></a>状态(State)</h3><p>当一个对象内在状态改变时允许改变其行为，这个对象看起来像是改变了其类。</p>
+<h3 id="访问者（Visitor）"><a href="#访问者（Visitor）" class="headerlink" title="访问者（Visitor）"></a>访问者（Visitor）</h3><p>表示一个作用于某对象结构中的个元素的操作。它使你可以在不改变各元素的类的前提下定义作用与这些元素的新操作。</p>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/arch/">arch</a></li></ul>
+
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2015/12/04/interrupt/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">interrupt、interrupted 、isInterrupted 区别</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2015/12/05/java-wait-notify-sync/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">java 为什么wait(),notify(),notifyAll()必须在同步方法/代码块中调用？</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2015/12/05/design-pattern/" data-title="设计模式(Design Pattern)" data-url="http://java.jr-jr.com/2015/12/05/design-pattern/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

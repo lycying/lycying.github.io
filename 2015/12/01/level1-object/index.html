@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>初级Java：基础概念，集合等 | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="目的：了解常用的类和方法，了解Java语言的语法和意义。 抽象类与接口有什么区别？ 抽象类与接口都用于抽象，但是抽象类可以有自己的部分实现，而接口则完全是一个标识(同时有多重继承的功能)。  什么是自动拆装箱？ 自动装箱是Java编译器在基本数据类型和对应的对象包装类型之间做的一个转化。比如：把int转化成Integer，double转化成Double，等等。反之就是自动拆箱。  switch语句">
+<meta property="og:type" content="article">
+<meta property="og:title" content="初级Java：基础概念，集合等">
+<meta property="og:url" content="http://java.jr-jr.com/2015/12/01/level1-object/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="目的：了解常用的类和方法，了解Java语言的语法和意义。 抽象类与接口有什么区别？ 抽象类与接口都用于抽象，但是抽象类可以有自己的部分实现，而接口则完全是一个标识(同时有多重继承的功能)。  什么是自动拆装箱？ 自动装箱是Java编译器在基本数据类型和对应的对象包装类型之间做的一个转化。比如：把int转化成Integer，double转化成Double，等等。反之就是自动拆箱。  switch语句">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.875Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="初级Java：基础概念，集合等">
+<meta name="twitter:description" content="目的：了解常用的类和方法，了解Java语言的语法和意义。 抽象类与接口有什么区别？ 抽象类与接口都用于抽象，但是抽象类可以有自己的部分实现，而接口则完全是一个标识(同时有多重继承的功能)。  什么是自动拆装箱？ 自动装箱是Java编译器在基本数据类型和对应的对象包装类型之间做的一个转化。比如：把int转化成Integer，double转化成Double，等等。反之就是自动拆箱。  switch语句">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-level1-object" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      初级Java：基础概念，集合等
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2015/12/01/level1-object/" class="article-date"><time datetime="2015-12-01T04:00:13.000Z" itemprop="datePublished">2015-12-01</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/初级/">初级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#抽象类与接口有什么区别？"><span class="toc-number">1.</span> <span class="toc-text">抽象类与接口有什么区别？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是自动拆装箱？"><span class="toc-number">2.</span> <span class="toc-text">什么是自动拆装箱？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#switch语句可以用String做条件么？"><span class="toc-number">3.</span> <span class="toc-text">switch语句可以用String做条件么？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#能在一个静态代码块里里调用非静态方法么"><span class="toc-number">4.</span> <span class="toc-text">能在一个静态代码块里里调用非静态方法么?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Java为什么要用范型，有什么好处？"><span class="toc-number">5.</span> <span class="toc-text">Java为什么要用范型，有什么好处？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#final、finally代码块和finalize-方法有什么区别？"><span class="toc-number">6.</span> <span class="toc-text">final、finally代码块和finalize()方法有什么区别？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#abstract的method是否可同时是static-是否可同时是native，是否可同时是synchronized"><span class="toc-number">7.</span> <span class="toc-text">abstract的method是否可同时是static,是否可同时是native，是否可同时是synchronized?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#try-里有一个return语句，那么紧跟在这个try后的finally-里的code会不会被执行，什么时候被执行，在return前还是后"><span class="toc-number">8.</span> <span class="toc-text">try {}里有一个return语句，那么紧跟在这个try后的finally {}里的code会不会被执行，什么时候被执行，在return前还是后?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Java中Exception和Error有什么区别？"><span class="toc-number">9.</span> <span class="toc-text">Java中Exception和Error有什么区别？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GC-是什么-为什么要有-GC"><span class="toc-number">10.</span> <span class="toc-text">GC 是什么? 为什么要有 GC?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#用最有效率的方法算出2乘以8等於几"><span class="toc-number">11.</span> <span class="toc-text">用最有效率的方法算出2乘以8等於几</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#float型float-f-3-4是否正确"><span class="toc-number">12.</span> <span class="toc-text">float型float f=3.4是否正确?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#String是最基本的数据类型吗，基本类型都有哪些？"><span class="toc-number">13.</span> <span class="toc-text">String是最基本的数据类型吗，基本类型都有哪些？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#一个”-java”源文件中是否可以包括多个类（不是内部类）？有什么限制？"><span class="toc-number">14.</span> <span class="toc-text">一个”.java”源文件中是否可以包括多个类（不是内部类）？有什么限制？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#给我一个你最常见到的runtime-exception"><span class="toc-number">15.</span> <span class="toc-text">给我一个你最常见到的runtime exception</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#throw和throws有什么区别？"><span class="toc-number">16.</span> <span class="toc-text">throw和throws有什么区别？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OverLoad-与-Override-的区别"><span class="toc-number">17.</span> <span class="toc-text">OverLoad 与 Override 的区别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在JAVA中，如何跳出当前的多重嵌套循环？"><span class="toc-number">18.</span> <span class="toc-text">在JAVA中，如何跳出当前的多重嵌套循环？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#amp-和-amp-amp-的区别"><span class="toc-number">19.</span> <span class="toc-text">&amp;和&amp;&amp;的区别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Math-round-11-5-等於多少-Math-round-11-5-等於多少"><span class="toc-number">20.</span> <span class="toc-text">Math.round(11.5)等於多少? Math.round(-11.5)等於多少</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Java有没有goto"><span class="toc-number">21.</span> <span class="toc-text">Java有没有goto?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#数组有没有length-这个方法-String有没有length-这个方法"><span class="toc-number">22.</span> <span class="toc-text">数组有没有length()这个方法? String有没有length()这个方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#你都知道哪些Java创建对象的方式"><span class="toc-number">23.</span> <span class="toc-text">你都知道哪些Java创建对象的方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Object类都有哪些常用的方法？"><span class="toc-number">24.</span> <span class="toc-text">Object类都有哪些常用的方法？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#一个对象要作为HashMap的key，需要重写什么方法"><span class="toc-number">25.</span> <span class="toc-text">一个对象要作为HashMap的key，需要重写什么方法?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Comparable和Comparator接口是干什么的？列出它们的区别。"><span class="toc-number">26.</span> <span class="toc-text">Comparable和Comparator接口是干什么的？列出它们的区别。</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#equals-和-hashCode-作用"><span class="toc-number">27.</span> <span class="toc-text">==, equals()和 hashCode()作用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HashMap的存储结构"><span class="toc-number">28.</span> <span class="toc-text">HashMap的存储结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HashSet和TreeSet有什么区别？"><span class="toc-number">29.</span> <span class="toc-text">HashSet和TreeSet有什么区别？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HashMap和Hashtable有什么区别？"><span class="toc-number">30.</span> <span class="toc-text">HashMap和Hashtable有什么区别？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ArrayList和LinkedList有什么区别？"><span class="toc-number">31.</span> <span class="toc-text">ArrayList和LinkedList有什么区别？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#有没有排序的map？"><span class="toc-number">32.</span> <span class="toc-text">有没有排序的map？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#怎样对一个List进行排序？"><span class="toc-number">33.</span> <span class="toc-text">怎样对一个List进行排序？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Java集合的基本接口都有哪些？"><span class="toc-number">34.</span> <span class="toc-text">Java集合的基本接口都有哪些？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#String-与-StringBuffer-StringBuilder-有什么区别"><span class="toc-number">35.</span> <span class="toc-text">String 与 StringBuffer , StringBuilder 有什么区别?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#char型变量中能不能存贮一个中文汉字"><span class="toc-number">36.</span> <span class="toc-text">char型变量中能不能存贮一个中文汉字?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ISO-8859-1可以存储中文么？"><span class="toc-number">37.</span> <span class="toc-text">ISO-8859-1可以存储中文么？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Enumeration和Iterator有什么关系"><span class="toc-number">38.</span> <span class="toc-text">Enumeration和Iterator有什么关系?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#给一个字符串-找到第一个不重复到字符？"><span class="toc-number">39.</span> <span class="toc-text">给一个字符串,找到第一个不重复到字符？</span></a></li></ol>
+        <p>目的：了解常用的类和方法，了解Java语言的语法和意义。</p>
+<h3 id="抽象类与接口有什么区别？"><a href="#抽象类与接口有什么区别？" class="headerlink" title="抽象类与接口有什么区别？"></a>抽象类与接口有什么区别？</h3><blockquote>
+<p>抽象类与接口都用于抽象，但是抽象类可以有自己的部分实现，而接口则完全是一个标识(同时有多重继承的功能)。</p>
+</blockquote>
+<h3 id="什么是自动拆装箱？"><a href="#什么是自动拆装箱？" class="headerlink" title="什么是自动拆装箱？"></a>什么是自动拆装箱？</h3><blockquote>
+<p>自动装箱是Java编译器在基本数据类型和对应的对象包装类型之间做的一个转化。比如：把<code>int</code>转化成<code>Integer</code>，<code>double</code>转化成<code>Double</code>，等等。反之就是自动拆箱。</p>
+</blockquote>
+<h3 id="switch语句可以用String做条件么？"><a href="#switch语句可以用String做条件么？" class="headerlink" title="switch语句可以用String做条件么？"></a>switch语句可以用String做条件么？</h3><blockquote>
+<p>考察对版本的了解，JDK7后是可以的，以前的版本不可以。</p>
+</blockquote>
+<h3 id="能在一个静态代码块里里调用非静态方法么"><a href="#能在一个静态代码块里里调用非静态方法么" class="headerlink" title="能在一个静态代码块里里调用非静态方法么?"></a>能在一个静态代码块里里调用非静态方法么?</h3><blockquote>
+<p>static变量在Java中是属于类的，它在所有的实例中的值是一样的。当类被Java虚拟机载入的时候，会对static变量进行初始化。如果你的代码尝试不用实例来访问非static的变量，编译器会报错，因为这些变量还没有被创建出来，还没有跟任何实例关联上。</p>
+</blockquote>
+<h3 id="Java为什么要用范型，有什么好处？"><a href="#Java为什么要用范型，有什么好处？" class="headerlink" title="Java为什么要用范型，有什么好处？"></a>Java为什么要用范型，有什么好处？</h3><blockquote>
+<p>通过编译期的报错，范型可以避免运行时的<code>ClassCastException</code>，也不用每次都用<code>instanceof</code>判断是否是此类型的对象。</p>
+</blockquote>
+<h3 id="final、finally代码块和finalize-方法有什么区别？"><a href="#final、finally代码块和finalize-方法有什么区别？" class="headerlink" title="final、finally代码块和finalize()方法有什么区别？"></a>final、finally代码块和finalize()方法有什么区别？</h3><blockquote>
+<p>final—修饰符（关键字）如果一个类被声明为final，意味着它不能再派生出新的子类，不能作为父类被继承。 被声明为final的方法也同样只能使用，不能重载。<br>无论是否抛出异常，finally代码块都会执行，它主要是用来释放应用占用的资源。<br>finalize()方法是Object类的一个protected方法，它是在对象被垃圾回收之前由Java虚拟机来调用的。</p>
+</blockquote>
+<h3 id="abstract的method是否可同时是static-是否可同时是native，是否可同时是synchronized"><a href="#abstract的method是否可同时是static-是否可同时是native，是否可同时是synchronized" class="headerlink" title="abstract的method是否可同时是static,是否可同时是native，是否可同时是synchronized?"></a>abstract的method是否可同时是static,是否可同时是native，是否可同时是synchronized?</h3><blockquote>
+<p>都不能</p>
+</blockquote>
+<h3 id="try-里有一个return语句，那么紧跟在这个try后的finally-里的code会不会被执行，什么时候被执行，在return前还是后"><a href="#try-里有一个return语句，那么紧跟在这个try后的finally-里的code会不会被执行，什么时候被执行，在return前还是后" class="headerlink" title="try {}里有一个return语句，那么紧跟在这个try后的finally {}里的code会不会被执行，什么时候被执行，在return前还是后?"></a>try {}里有一个return语句，那么紧跟在这个try后的finally {}里的code会不会被执行，什么时候被执行，在return前还是后?</h3><blockquote>
+<p>会执行，在return前执行</p>
+</blockquote>
+<h3 id="Java中Exception和Error有什么区别？"><a href="#Java中Exception和Error有什么区别？" class="headerlink" title="Java中Exception和Error有什么区别？"></a>Java中Exception和Error有什么区别？</h3><blockquote>
+<p>Exception和Error都是Throwable的子类。Exception用于用户程序可以捕获的异常情况。Error定义了不期望被用户程序捕获的异常。</p>
+</blockquote>
+<h3 id="GC-是什么-为什么要有-GC"><a href="#GC-是什么-为什么要有-GC" class="headerlink" title="GC 是什么? 为什么要有 GC?"></a>GC 是什么? 为什么要有 GC?</h3><blockquote>
+<p>GC 是垃圾收集的意思(Gabage Collection),内存处理是编程人员容易出现问题的地<br>方,忘记或者错误的内存回收会导致程序或系统的不稳定甚至崩溃,Java 提供的 GC 功能可 以自动监测对象是否超过作用域从而达到自动回收内存的目的,Java 语言没有提供释放已 分配内存的显示操作方法。</p>
+</blockquote>
+<h3 id="用最有效率的方法算出2乘以8等於几"><a href="#用最有效率的方法算出2乘以8等於几" class="headerlink" title="用最有效率的方法算出2乘以8等於几"></a>用最有效率的方法算出2乘以8等於几</h3><blockquote>
+<p><code>2 &lt;&lt; 3</code></p>
+</blockquote>
+<h3 id="float型float-f-3-4是否正确"><a href="#float型float-f-3-4是否正确" class="headerlink" title="float型float f=3.4是否正确?"></a>float型<code>float f=3.4</code>是否正确?</h3><blockquote>
+<p>不正确。精度不准确,应该用强制类型转换，如下所示：<code>float f=(float)3.4</code></p>
+</blockquote>
+<h3 id="String是最基本的数据类型吗，基本类型都有哪些？"><a href="#String是最基本的数据类型吗，基本类型都有哪些？" class="headerlink" title="String是最基本的数据类型吗，基本类型都有哪些？"></a>String是最基本的数据类型吗，基本类型都有哪些？</h3><blockquote>
+<p>基本数据类型包括byte、int、char、long、float、double、boolean和short。String不是。</p>
+</blockquote>
+<h3 id="一个”-java”源文件中是否可以包括多个类（不是内部类）？有什么限制？"><a href="#一个”-java”源文件中是否可以包括多个类（不是内部类）？有什么限制？" class="headerlink" title="一个”.java”源文件中是否可以包括多个类（不是内部类）？有什么限制？"></a>一个”.java”源文件中是否可以包括多个类（不是内部类）？有什么限制？</h3><blockquote>
+<p>可以。必须只有一个类名与文件名相同。</p>
+</blockquote>
+<h3 id="给我一个你最常见到的runtime-exception"><a href="#给我一个你最常见到的runtime-exception" class="headerlink" title="给我一个你最常见到的runtime exception"></a>给我一个你最常见到的runtime exception</h3><blockquote>
+<p>说几个就成，常见的运行时异常有如下这些<code>ArithmeticException</code>, <code>ArrayStoreException</code>, <code>BufferOverflowException</code>, <code>BufferUnderflowException</code>, <code>CannotRedoException</code>, <code>CannotUndoException</code>, <code>ClassCastException</code>, <code>CMMException</code>, <code>ConcurrentModificationException</code>, <code>DOMException</code>, <code>EmptyStackException</code>, <code>IllegalArgumentException</code>, <code>IllegalMonitorStateException</code>, <code>IllegalPathStateException</code>, <code>IllegalStateException</code>, <code>ImagingOpException</code>, <code>IndexOutOfBoundsException</code>, <code>MissingResourceException</code>, <code>NegativeArraySizeException</code>, <code>NoSuchElementException</code>, <code>NullPointerException</code>, <code>ProfileDataException</code>, <code>ProviderException</code>, <code>RasterFormatException</code>, <code>SecurityException</code>, <code>SystemException</code>, <code>UndeclaredThrowableException</code>, <code>UnmodifiableSetException</code>, <code>UnsupportedOperationException</code></p>
+</blockquote>
+<h3 id="throw和throws有什么区别？"><a href="#throw和throws有什么区别？" class="headerlink" title="throw和throws有什么区别？"></a>throw和throws有什么区别？</h3><blockquote>
+<p>throw关键字用来在程序中明确的抛出异常，相反，throws语句用来表明方法不能处理的异常。每一个方法都必须要指定哪些异常不能处理，所以方法的调用者才能够确保处理可能发生的异常，多个异常是用逗号分隔的。</p>
+</blockquote>
+<h3 id="OverLoad-与-Override-的区别"><a href="#OverLoad-与-Override-的区别" class="headerlink" title="OverLoad 与 Override 的区别"></a>OverLoad 与 Override 的区别</h3><blockquote>
+<p>Overload：重载，表现类的多态性，可以有相同的函数名但是参数名、返回值、类型不能相同。<br>Override：重写，在子类继承父类的时候子类中可以定义某方法与其父类有相同的名称和参数，当子类在调用这一函数时自动调用子类的方法，而父类相当于被覆盖了。</p>
+</blockquote>
+<h3 id="在JAVA中，如何跳出当前的多重嵌套循环？"><a href="#在JAVA中，如何跳出当前的多重嵌套循环？" class="headerlink" title="在JAVA中，如何跳出当前的多重嵌套循环？"></a>在JAVA中，如何跳出当前的多重嵌套循环？</h3><blockquote>
+<p>使用多个break，或者使用return</p>
+</blockquote>
+<h3 id="amp-和-amp-amp-的区别"><a href="#amp-和-amp-amp-的区别" class="headerlink" title="&amp;和&amp;&amp;的区别"></a>&amp;和&amp;&amp;的区别</h3><blockquote>
+<p>&amp;是位运算符，表示按位与运算，&amp;&amp;是逻辑运算符，表示逻辑与（and）</p>
+</blockquote>
+<h3 id="Math-round-11-5-等於多少-Math-round-11-5-等於多少"><a href="#Math-round-11-5-等於多少-Math-round-11-5-等於多少" class="headerlink" title="Math.round(11.5)等於多少? Math.round(-11.5)等於多少"></a>Math.round(11.5)等於多少? Math.round(-11.5)等於多少</h3><blockquote>
+<p>Math.round(11.5)==12;Math.round(-11.5)==-11;round方法返回与参数最接近。同理还有Math.floor()</p>
+</blockquote>
+<h3 id="Java有没有goto"><a href="#Java有没有goto" class="headerlink" title="Java有没有goto?"></a>Java有没有goto?</h3><blockquote>
+<p>java中的保留字，现在没有在java中使用</p>
+</blockquote>
+<h3 id="数组有没有length-这个方法-String有没有length-这个方法"><a href="#数组有没有length-这个方法-String有没有length-这个方法" class="headerlink" title="数组有没有length()这个方法? String有没有length()这个方法"></a>数组有没有length()这个方法? String有没有length()这个方法</h3><blockquote>
+<p>数组没有length()这个方法，有length的属性。String有有length()这个方法</p>
+</blockquote>
+<h3 id="你都知道哪些Java创建对象的方式"><a href="#你都知道哪些Java创建对象的方式" class="headerlink" title="你都知道哪些Java创建对象的方式"></a>你都知道哪些Java创建对象的方式</h3><blockquote>
+<ul>
+<li>通过new关键字</li>
+<li>运用反射手段,调用java.lang.Class 或者 java.lang.reflect.Constructor 类的newInstance()实例方法</li>
+<li>clone() 通过克隆</li>
+<li>通过反序列化</li>
+</ul>
+</blockquote>
+<h3 id="Object类都有哪些常用的方法？"><a href="#Object类都有哪些常用的方法？" class="headerlink" title="Object类都有哪些常用的方法？"></a>Object类都有哪些常用的方法？</h3><blockquote>
+<p>clone(),equals(),hashCode(),notify(),notifyAll(), toString(),wait(),finalize()<br>主要是为了考察对java的大体了解</p>
+</blockquote>
+<h3 id="一个对象要作为HashMap的key，需要重写什么方法"><a href="#一个对象要作为HashMap的key，需要重写什么方法" class="headerlink" title="一个对象要作为HashMap的key，需要重写什么方法?"></a>一个对象要作为HashMap的key，需要重写什么方法?</h3><blockquote>
+<p>必须同时覆盖equals和hashCode方法。如果不这样做的话，就会违反<code>Object.hashCode</code>的通用约定，从而导致该类无法结合所有基于散列的集合一起正常运作，这样的集合包括<code>HashMap</code>、<code>HashSet</code>和<code>Hashtable</code>等。 </p>
+</blockquote>
+<h3 id="Comparable和Comparator接口是干什么的？列出它们的区别。"><a href="#Comparable和Comparator接口是干什么的？列出它们的区别。" class="headerlink" title="Comparable和Comparator接口是干什么的？列出它们的区别。"></a>Comparable和Comparator接口是干什么的？列出它们的区别。</h3><blockquote>
+<p>Java提供了只包含一个compareTo()方法的<code>Comparable接口</code>。这个方法可以个给两个对象排序。具体来说，它返回负数，0，正数来表明输入对象小于，等于，大于已经存在的对象。<br>Java提供了包含<code>compare()</code>和<code>equals()</code>两个方法的Comparator接口。compare()方法用来给两个输入参数排序，返回负数，0，正数表明第一个参数是小于，等于，大于第二个参数。equals()方法需要一个对象作为参数，它用来决定输入参数是否和comparator相等。只有当输入参数也是一个comparator并且输入参数和当前comparator的排序结果是相同的时候，这个方法才返回true。</p>
+</blockquote>
+<h3 id="equals-和-hashCode-作用"><a href="#equals-和-hashCode-作用" class="headerlink" title="==, equals()和 hashCode()作用"></a>==, equals()和 hashCode()作用</h3><blockquote>
+<p>java中的==是比较两个对象在JVM中的地址。equals是比较的值是否相等。举个例子，比较字符串值是否相等，用equals。<br>hashCode和equals是一对协同方法。如果你的对象打算所谓散列表的key，一般先先判断hashcode再判断equals。它们之间有以下关系：<br>覆盖equals时总要覆盖hashCode。<br>如果一个对象equals另外一个对象，则它们的hashcode一定相等。<br>有很大可能会追问HashMap的存储结构。如下:</p>
+</blockquote>
+<h3 id="HashMap的存储结构"><a href="#HashMap的存储结构" class="headerlink" title="HashMap的存储结构"></a>HashMap的存储结构</h3><blockquote>
+<p><code>HashMap采用数组加链表的方式存储</code>。拿put方法来说，首先，通过key的hashcode定位到数组的某一位置，如果这个位置为空，则将值插入到此位置。假如此位置有其他数据，则证明有冲突，HashMap使用链表解决冲突，会使用equals方法来逐一判断列表中的值，有相等的则覆盖，否则加入到冲突列表的结尾。</p>
+</blockquote>
+<h3 id="HashSet和TreeSet有什么区别？"><a href="#HashSet和TreeSet有什么区别？" class="headerlink" title="HashSet和TreeSet有什么区别？"></a>HashSet和TreeSet有什么区别？</h3><blockquote>
+<ul>
+<li>HashSet是由一个hash表来实现的，因此，它的元素是无序的。add()，remove()，contains()方法的时间复杂度是O(1)。</li>
+<li>TreeSet是由一个树形的结构来实现的，它里面的元素是有序的。因此，add()，remove()，contains()方法的时间复杂度是O(logn)。</li>
+</ul>
+</blockquote>
+<h3 id="HashMap和Hashtable有什么区别？"><a href="#HashMap和Hashtable有什么区别？" class="headerlink" title="HashMap和Hashtable有什么区别？"></a>HashMap和Hashtable有什么区别？</h3><blockquote>
+<ul>
+<li>HashMap和Hashtable都实现了Map接口，因此很多特性非常相似。但是，他们有以下不同点：</li>
+<li>HashMap允许键和值是null，而Hashtable不允许键或者值是null。</li>
+<li>Hashtable是同步的，而HashMap不是。因此，HashMap更适合于单线程环境，而Hashtable适合于多线程环境。</li>
+<li>HashMap提供了可供应用迭代的键的集合，因此，HashMap是快速失败的。另一方面，Hashtable提供了对键的列举(Enumeration)。</li>
+<li>一般认为Hashtable是一个遗留的类。</li>
+</ul>
+</blockquote>
+<h3 id="ArrayList和LinkedList有什么区别？"><a href="#ArrayList和LinkedList有什么区别？" class="headerlink" title="ArrayList和LinkedList有什么区别？"></a>ArrayList和LinkedList有什么区别？</h3><blockquote>
+<p>ArrayList和LinkedList都实现了List接口，他们有以下的不同点：</p>
+<ul>
+<li>ArrayList是基于索引的数据接口，它的底层是数组。它可以以O(1)时间复杂度对元素进行随机访问。与此对应，LinkedList是以元素列表的形式存储它的数据，每一个元素都和它的前一个和后一个元素链接在一起，在这种情况下，查找某个元素的时间复杂度是O(n)。</li>
+<li>相对于ArrayList，LinkedList的插入，添加，删除操作速度更快，因为当元素被添加到集合任意位置的时候，不需要像数组那样重新计算大小或者是更新索引。</li>
+<li>LinkedList比ArrayList更占内存，因为LinkedList为每一个节点存储了两个引用，一个指向前一个元素，一个指向下一个元素。</li>
+</ul>
+</blockquote>
+<h3 id="有没有排序的map？"><a href="#有没有排序的map？" class="headerlink" title="有没有排序的map？"></a>有没有排序的map？</h3><blockquote>
+<p>可以使用TreeMap进行排序</p>
+</blockquote>
+<h3 id="怎样对一个List进行排序？"><a href="#怎样对一个List进行排序？" class="headerlink" title="怎样对一个List进行排序？"></a>怎样对一个List进行排序？</h3><blockquote>
+<p><code>实现Comparable接口</code>,并调用<code>Collections</code>的<code>sort</code>方法。</p>
+</blockquote>
+<h3 id="Java集合的基本接口都有哪些？"><a href="#Java集合的基本接口都有哪些？" class="headerlink" title="Java集合的基本接口都有哪些？"></a>Java集合的基本接口都有哪些？</h3><blockquote>
+<p><code>Collection</code>是<code>Set</code>和<code>List</code>的根类,<code>Set</code>是不可从福列表，<code>List</code>是可以包含重复数据的列表，<code>Map</code>是包含多个键值对的集合。</p>
+</blockquote>
+<h3 id="String-与-StringBuffer-StringBuilder-有什么区别"><a href="#String-与-StringBuffer-StringBuilder-有什么区别" class="headerlink" title="String 与 StringBuffer , StringBuilder 有什么区别?"></a>String 与 StringBuffer , StringBuilder 有什么区别?</h3><blockquote>
+<p>String 是被 final 修饰的类,意味着 String 类不能被继承使用, 一旦声明是一个不可变的类。<br>StringBuffer和StringBuilder是一个长度可变的,通过追加的方式扩充，当进行大量字符串操作时，会提高性能。<br>StringBuffer是线程安全的，所以效率相对StringBuilder要低，线程安全的情况下建议使用StringBuilder。</p>
+</blockquote>
+<h3 id="char型变量中能不能存贮一个中文汉字"><a href="#char型变量中能不能存贮一个中文汉字" class="headerlink" title="char型变量中能不能存贮一个中文汉字?"></a>char型变量中能不能存贮一个中文汉字?</h3><blockquote>
+<p>可以，因为java中以unicode编码，一个char占16个字节，所以放一个中文是没问题的。</p>
+</blockquote>
+<h3 id="ISO-8859-1可以存储中文么？"><a href="#ISO-8859-1可以存储中文么？" class="headerlink" title="ISO-8859-1可以存储中文么？"></a>ISO-8859-1可以存储中文么？</h3><blockquote>
+<p>可以，以ISO-8859-1编码的文本，都以bytes[]的形式保存，若要显示中文，只需以显示平台的默认编码格式进行解码即可。若仍然以ISO-8859-1格式解码，得到的中文字符肯定是乱码，因为ISO-8859-1自身不能显示中文。</p>
+</blockquote>
+<h3 id="Enumeration和Iterator有什么关系"><a href="#Enumeration和Iterator有什么关系" class="headerlink" title="Enumeration和Iterator有什么关系?"></a>Enumeration和Iterator有什么关系?</h3><blockquote>
+<p>Enumeration是个接口，不是类，再次，这个东西就是为了实现遍历的，现在已经被迭代器Iterator取代了。<br>Iterator支持fail-fast机制，而Enumeration不支持。</p>
+</blockquote>
+<h3 id="给一个字符串-找到第一个不重复到字符？"><a href="#给一个字符串-找到第一个不重复到字符？" class="headerlink" title="给一个字符串,找到第一个不重复到字符？"></a>给一个字符串,找到第一个不重复到字符？</h3><blockquote>
+<p>可以用HashMap来搞，也可以用字符串函数如indexOf,lastIndexOf等 <a href="http://www.iteye.com/topic/138206" target="_blank" rel="noopener">讨论</a></p>
+</blockquote>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2015/11/30/getstart/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">写这一系列的目的</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2015/12/01/level1-thread/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">java初级：多线程基础知识</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2015/12/01/level1-object/" data-title="初级Java：基础概念，集合等" data-url="http://java.jr-jr.com/2015/12/01/level1-object/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

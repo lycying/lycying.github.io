@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>(转)多线程经典问题 | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="很多核心面试题来源于多线程(Multi-Threading)和集合框架(Collections Framework)，理解核心线程概念时，娴熟的实际经验是必需的。这篇文章收集了Java线程方面一些典型的问题，这些问题经常被高级工程师所问到。 JAVA中多线程同步是什么？在多线程程序下，同步能控制对共享资源的访问。如果没有同步，当一个Java线程在修改一个共享变量时，另外一个线程正在使用或者更新同一">
+<meta name="keywords" content="thread">
+<meta property="og:type" content="article">
+<meta property="og:title" content="(转)多线程经典问题">
+<meta property="og:url" content="http://java.jr-jr.com/2016/07/03/thread-basic/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="很多核心面试题来源于多线程(Multi-Threading)和集合框架(Collections Framework)，理解核心线程概念时，娴熟的实际经验是必需的。这篇文章收集了Java线程方面一些典型的问题，这些问题经常被高级工程师所问到。 JAVA中多线程同步是什么？在多线程程序下，同步能控制对共享资源的访问。如果没有同步，当一个Java线程在修改一个共享变量时，另外一个线程正在使用或者更新同一">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.885Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="(转)多线程经典问题">
+<meta name="twitter:description" content="很多核心面试题来源于多线程(Multi-Threading)和集合框架(Collections Framework)，理解核心线程概念时，娴熟的实际经验是必需的。这篇文章收集了Java线程方面一些典型的问题，这些问题经常被高级工程师所问到。 JAVA中多线程同步是什么？在多线程程序下，同步能控制对共享资源的访问。如果没有同步，当一个Java线程在修改一个共享变量时，另外一个线程正在使用或者更新同一">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-thread-basic" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      (转)多线程经典问题
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2016/07/03/thread-basic/" class="article-date"><time datetime="2016-07-03T05:29:27.000Z" itemprop="datePublished">2016-07-03</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/初级/">初级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#JAVA中多线程同步是什么？"><span class="toc-number">1.</span> <span class="toc-text">JAVA中多线程同步是什么？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#解释实现多线程的几种方法"><span class="toc-number">2.</span> <span class="toc-text">解释实现多线程的几种方法?</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#THREAD-START-与THREAD-RUN-有什么区别？"><span class="toc-number">3.</span> <span class="toc-text">THREAD.START()与THREAD.RUN()有什么区别？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#为什么需要RUN-和START-方法，我们可以只用RUN-方法来完成任务吗？"><span class="toc-number">4.</span> <span class="toc-text">为什么需要RUN()和START()方法，我们可以只用RUN()方法来完成任务吗？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#什么是THREADLOCAL类，怎么使用它？"><span class="toc-number">5.</span> <span class="toc-text">什么是THREADLOCAL类，怎么使用它？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#什么时候抛出INVALIDMONITORSTATEEXCEPTION异常，为什么？"><span class="toc-number">6.</span> <span class="toc-text">什么时候抛出INVALIDMONITORSTATEEXCEPTION异常，为什么？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#SLEEP-、SUSPEND-和WAIT-之间有什么区别？"><span class="toc-number">7.</span> <span class="toc-text">SLEEP()、SUSPEND()和WAIT()之间有什么区别？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#在静态方法上使用同步时会发生什么事？"><span class="toc-number">8.</span> <span class="toc-text">在静态方法上使用同步时会发生什么事？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#当一个同步方法已经执行，线程能够调用对象上的非同步实例方法吗？"><span class="toc-number">9.</span> <span class="toc-text">当一个同步方法已经执行，线程能够调用对象上的非同步实例方法吗？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#在一个对象上两个线程可以调用两个不同的同步实例方法吗？"><span class="toc-number">10.</span> <span class="toc-text">在一个对象上两个线程可以调用两个不同的同步实例方法吗？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#什么是死锁"><span class="toc-number">11.</span> <span class="toc-text">什么是死锁</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#什么是线程饿死，什么是活锁？"><span class="toc-number">12.</span> <span class="toc-text">什么是线程饿死，什么是活锁？</span></a></li></ol>
+        <p>很多核心面试题来源于多线程(Multi-Threading)和集合框架(Collections Framework)，理解核心线程概念时，娴熟的实际经验是必需的。这篇文章收集了Java线程方面一些典型的问题，这些问题经常被高级工程师所问到。</p>
+<h4 id="JAVA中多线程同步是什么？"><a href="#JAVA中多线程同步是什么？" class="headerlink" title="JAVA中多线程同步是什么？"></a>JAVA中多线程同步是什么？</h4><p>在多线程程序下，同步能控制对共享资源的访问。如果没有同步，当一个Java线程在修改一个共享变量时，另外一个线程正在使用或者更新同一个变量，这样容易导致程序出现错误的结果。</p>
+<h4 id="解释实现多线程的几种方法"><a href="#解释实现多线程的几种方法" class="headerlink" title="解释实现多线程的几种方法?"></a>解释实现多线程的几种方法?</h4><p>一Java线程可以实现Runnable接口或者继承Thread类来实现，当你打算多重继承时，优先选择实现Runnable。</p>
+<h4 id="THREAD-START-与THREAD-RUN-有什么区别？"><a href="#THREAD-START-与THREAD-RUN-有什么区别？" class="headerlink" title="THREAD.START()与THREAD.RUN()有什么区别？"></a>THREAD.START()与THREAD.RUN()有什么区别？</h4><p>Thread.start()方法(native)启动线程，使之进入就绪状态，当cpu分配时间该线程时，由JVM调度执行run()方法。</p>
+<h4 id="为什么需要RUN-和START-方法，我们可以只用RUN-方法来完成任务吗？"><a href="#为什么需要RUN-和START-方法，我们可以只用RUN-方法来完成任务吗？" class="headerlink" title="为什么需要RUN()和START()方法，我们可以只用RUN()方法来完成任务吗？"></a>为什么需要RUN()和START()方法，我们可以只用RUN()方法来完成任务吗？</h4><p>我们需要run()&amp;start()这两个方法是因为JVM创建一个单独的线程不同于普通方法的调用，所以这项工作由线程的start方法来完成，start由本地方法实现，需要显示地被调用，使用这俩个方法的另外一个好处是任何一个对象都可以作为线程运行，只要实现了Runnable接口，这就避免因继承了Thread类而造成的Java的多继承问题。</p>
+<h4 id="什么是THREADLOCAL类，怎么使用它？"><a href="#什么是THREADLOCAL类，怎么使用它？" class="headerlink" title="什么是THREADLOCAL类，怎么使用它？"></a>什么是THREADLOCAL类，怎么使用它？</h4><p>ThreadLocal是一个线程级别的局部变量，并非“本地线程”。ThreadLocal为每个使用该变量的线程提供了一个独立的变量副本，每个线程修改副本时不影响其它线程对象的副本(译者注)。</p>
+<p>下面是线程局部变量(ThreadLocal variables)的关键点：</p>
+<p>一个线程局部变量(ThreadLocal variables)为每个线程方便地提供了一个单独的变量。</p>
+<p>ThreadLocal实例通常作为静态的私有的(private static)字段出现在一个类中，这个类用来关联一个线程。</p>
+<p>当多个线程访问ThreadLocal实例时，每个线程维护ThreadLocal提供的独立的变量副本。</p>
+<p>常用的使用可在DAO模式中见到，当DAO类作为一个单例类时，数据库链接(connection)被每一个线程独立的维护，互不影响。(基于线程的单例)<br>ThreadLocal难于理解，下面这些引用连接有助于你更好的理解它。</p>
+<p>《Good article on ThreadLocal on IBM DeveloperWorks 》、《理解ThreadLocal》、《Managing data : Good example》、《Refer Java API Docs》</p>
+<h4 id="什么时候抛出INVALIDMONITORSTATEEXCEPTION异常，为什么？"><a href="#什么时候抛出INVALIDMONITORSTATEEXCEPTION异常，为什么？" class="headerlink" title="什么时候抛出INVALIDMONITORSTATEEXCEPTION异常，为什么？"></a>什么时候抛出INVALIDMONITORSTATEEXCEPTION异常，为什么？</h4><p>调用wait()/notify()/notifyAll()中的任何一个方法时，如果当前线程没有获得该对象的锁，那么就会抛出IllegalMonitorStateException的异常(也就是说程序在没有执行对象的任何同步块或者同步方法时，仍然尝试调用wait()/notify()/notifyAll()时)。</p>
+<p>由于该异常是RuntimeExcpetion的子类，所以该异常不一定要捕获(尽管你可以捕获只要你愿意).作为RuntimeException，此类异常不会在wait(),notify(),notifyAll()的方法签名提及。</p>
+<h4 id="SLEEP-、SUSPEND-和WAIT-之间有什么区别？"><a href="#SLEEP-、SUSPEND-和WAIT-之间有什么区别？" class="headerlink" title="SLEEP()、SUSPEND()和WAIT()之间有什么区别？"></a>SLEEP()、SUSPEND()和WAIT()之间有什么区别？</h4><p>Thread.sleep()使当前线程在指定的时间处于“非运行”（Not Runnable）状态。线程一直持有对象的监视器。比如一个线程当前在一个同步块或同步方法中，其它线程不能进入该块或方法中。如果另一线程调用了interrupt()方法，它将唤醒那个“睡眠的”线程。</p>
+<p>注意：sleep()是一个静态方法。这意味着只对当前线程有效，一个常见的错误是调用t.sleep()，（这里的t是一个不同于当前线程的线程）。即便是执行t.sleep()，也是当前线程进入睡眠，而不是t线程。t.suspend()是过时的方法，使用suspend()导致线程进入停滞状态，该线程会一直持有对象的监视器，suspend()容易引起死锁问题。</p>
+<p>object.wait()使当前线程出于“不可运行”状态，和sleep()不同的是wait是object的方法而不是thread。调用object.wait()时，线程先要获取这个对象的对象锁，当前线程必须在锁对象保持同步，把当前线程添加到等待队列中，随后另一线程可以同步同一个对象锁来调用object.notify()，这样将唤醒原来等待中的线程，然后释放该锁。基本上wait()/notify()与sleep()/interrupt()类似，只是前者需要获取对象锁。</p>
+<h4 id="在静态方法上使用同步时会发生什么事？"><a href="#在静态方法上使用同步时会发生什么事？" class="headerlink" title="在静态方法上使用同步时会发生什么事？"></a>在静态方法上使用同步时会发生什么事？</h4><p>同步静态方法时会获取该类的“Class”对象，所以当一个线程进入同步的静态方法中时，线程监视器获取类本身的对象锁，其它线程不能进入这个类的任何静态同步方法。它不像实例方法，因为多个线程可以同时访问不同实例同步实例方法。</p>
+<h4 id="当一个同步方法已经执行，线程能够调用对象上的非同步实例方法吗？"><a href="#当一个同步方法已经执行，线程能够调用对象上的非同步实例方法吗？" class="headerlink" title="当一个同步方法已经执行，线程能够调用对象上的非同步实例方法吗？"></a>当一个同步方法已经执行，线程能够调用对象上的非同步实例方法吗？</h4><p>可以，一个非同步方法总是可以被调用而不会有任何问题。实际上，Java没有为非同步方法做任何检查，锁对象仅仅在同步方法或者同步代码块中检查。如果一个方法没有声明为同步，即使你在使用共享数据Java照样会调用，而不会做检查是否安全，所以在这种情况下要特别小心。一个方法是否声明为同步取决于临界区访问(critial section access),如果方法不访问临界区(共享资源或者数据结构)就没必要声明为同步的。</p>
+<p>下面有一个示例说明：Common类有两个方法synchronizedMethod1()和method1()，MyThread类在独立的线程中调用这两个方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Common</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">synchronizedMethod1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">System.out.println(“synchronizedMethod1 called”);</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">&#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">e.printStackTrace();</span><br><span class="line">&#125;</span><br><span class="line">System.out.println(“synchronizedMethod1 done”);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">method1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">System.out.println(“Method <span class="number">1</span> called”);</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">&#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">e.printStackTrace();</span><br><span class="line">&#125;</span><br><span class="line">System.out.println(“Method <span class="number">1</span> done”);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyThread</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> id = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">private</span> Common common;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">MyThread</span><span class="params">(String name, <span class="keyword">int</span> no, Common object)</span> </span>&#123;</span><br><span class="line"><span class="keyword">super</span>(name);</span><br><span class="line">common = object;</span><br><span class="line">id = no;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">System.out.println(“Running Thread” + <span class="keyword">this</span>.getName());</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line"><span class="keyword">if</span> (id == <span class="number">0</span>) &#123;</span><br><span class="line">common.synchronizedMethod1();</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">common.method1();</span><br><span class="line">&#125;</span><br><span class="line">&#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">e.printStackTrace();</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">Common c = <span class="keyword">new</span> Common();</span><br><span class="line">MyThread t1 = <span class="keyword">new</span> MyThread(“MyThread-<span class="number">1</span>″, <span class="number">0</span>, c);</span><br><span class="line">MyThread t2 = <span class="keyword">new</span> MyThread(“MyThread-<span class="number">2</span>″, <span class="number">1</span>, c);</span><br><span class="line">t1.start();</span><br><span class="line">t2.start();</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里是程序的输出：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Running ThreadMyThread-1</span><br><span class="line">synchronizedMethod1 called</span><br><span class="line">Running ThreadMyThread-2</span><br><span class="line">Method 1 called</span><br><span class="line">synchronizedMethod1 <span class="keyword">done</span></span><br><span class="line">Method 1 <span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+<p>结果表明即使synchronizedMethod1()方法执行了，method1()也会被调用。</p>
+<h4 id="在一个对象上两个线程可以调用两个不同的同步实例方法吗？"><a href="#在一个对象上两个线程可以调用两个不同的同步实例方法吗？" class="headerlink" title="在一个对象上两个线程可以调用两个不同的同步实例方法吗？"></a>在一个对象上两个线程可以调用两个不同的同步实例方法吗？</h4><p>不能，因为一个对象已经同步了实例方法，线程获取了对象的对象锁。所以只有执行完该方法释放对象锁后才能执行其它同步方法。<br>看下面代码示例非常清晰：Common 类 有synchronizedMethod1()和synchronizedMethod2()方法，MyThread调用这两个方法。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Common</span> </span>&#123;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">synchronizedMethod1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">System.out.println(“synchronizedMethod1 called”);</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">&#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">e.printStackTrace();</span><br><span class="line">&#125;</span><br><span class="line">System.out.println(“synchronizedMethod1 done”);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">synchronizedMethod2</span><span class="params">()</span> </span>&#123;</span><br><span class="line">System.out.println(“synchronizedMethod2 called”);</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">&#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">e.printStackTrace();</span><br><span class="line">&#125;</span><br><span class="line">System.out.println(“synchronizedMethod2 done”);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyThread</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> id = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">private</span> Common common;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">MyThread</span><span class="params">(String name, <span class="keyword">int</span> no, Common object)</span> </span>&#123;</span><br><span class="line"><span class="keyword">super</span>(name);</span><br><span class="line">common = object;</span><br><span class="line">id = no;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">System.out.println(“Running Thread” + <span class="keyword">this</span>.getName());</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line"><span class="keyword">if</span> (id == <span class="number">0</span>) &#123;</span><br><span class="line">common.synchronizedMethod1();</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">common.synchronizedMethod2();</span><br><span class="line">&#125;</span><br><span class="line">&#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">e.printStackTrace();</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">Common c = <span class="keyword">new</span> Common();</span><br><span class="line">MyThread t1 = <span class="keyword">new</span> MyThread(“MyThread-<span class="number">1</span>″, <span class="number">0</span>, c);</span><br><span class="line">MyThread t2 = <span class="keyword">new</span> MyThread(“MyThread-<span class="number">2</span>″, <span class="number">1</span>, c);</span><br><span class="line">t1.start();</span><br><span class="line">t2.start();</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="什么是死锁"><a href="#什么是死锁" class="headerlink" title="什么是死锁"></a>什么是死锁</h4><p>死锁就是两个或两个以上的线程被无限的阻塞，线程之间相互等待所需资源。这种情况可能发生在当两个线程尝试获取其它资源的锁，而每个线程又陷入无限等待其它资源锁的释放，除非一个用户进程被终止。就JavaAPI而言，线程死锁可能发生在一下情况。</p>
+<ul>
+<li>当两个线程相互调用Thread.join()</li>
+<li>当两个线程使用嵌套的同步块，一个线程占用了另外一个线程必需的锁，互相等待时被阻塞就有可能出现死锁。</li>
+</ul>
+<h4 id="什么是线程饿死，什么是活锁？"><a href="#什么是线程饿死，什么是活锁？" class="headerlink" title="什么是线程饿死，什么是活锁？"></a>什么是线程饿死，什么是活锁？</h4><p>线程饿死和活锁虽然不想是死锁一样的常见问题，但是对于并发编程的设计者来说就像一次邂逅一样。<br>当所有线程阻塞，或者由于需要的资源无效而不能处理，不存在非阻塞线程使资源可用。JavaAPI中线程活锁可能发生在以下情形：</p>
+<ul>
+<li>当所有线程在程序中执行Object.wait(0)，参数为0的wait方法。程序将发生活锁直到在相应的对象上有线程调用Object.notify()或者Object.notifyAll()。</li>
+<li>当所有线程卡在无限循环中。</li>
+</ul>
+<p>这里的问题并不详尽，我相信还有很多重要的问题并未提及，您认为还有哪些问题应该包括在上面呢？欢迎在评论中分享任何形式的问题与建议。</p>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/thread/">thread</a></li></ul>
+
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2016/07/03/java-bit/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">位运算符和位运算(与,或,异或等)的用途</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2016/07/03/linux-cache-free/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">(转)手动释放linux内存cache和脚本定时释放</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2016/07/03/thread-basic/" data-title="(转)多线程经典问题" data-url="http://java.jr-jr.com/2016/07/03/thread-basic/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

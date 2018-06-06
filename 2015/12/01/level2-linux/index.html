@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>java中级：linux | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="如何查看一个文件中的第m到第n行?一个文件每行以逗号分隔，如何打印出用逗号分割后字段为10的行?分析apache日志，给出当日访问ip的降序列表。查找文件后缀是log的三天前的文件并删除写一个脚本将目录下大于100kb的文件移动到/tmp下用sed修改文件mailbox.txt的20行的zhango为wang正则表达式，IP地址的匹配，写一下你怎么检查一个文本文件中某一行的长度？join,cut,">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java中级：linux">
+<meta property="og:url" content="http://java.jr-jr.com/2015/12/01/level2-linux/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="如何查看一个文件中的第m到第n行?一个文件每行以逗号分隔，如何打印出用逗号分割后字段为10的行?分析apache日志，给出当日访问ip的降序列表。查找文件后缀是log的三天前的文件并删除写一个脚本将目录下大于100kb的文件移动到/tmp下用sed修改文件mailbox.txt的20行的zhango为wang正则表达式，IP地址的匹配，写一下你怎么检查一个文本文件中某一行的长度？join,cut,">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.877Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="java中级：linux">
+<meta name="twitter:description" content="如何查看一个文件中的第m到第n行?一个文件每行以逗号分隔，如何打印出用逗号分割后字段为10的行?分析apache日志，给出当日访问ip的降序列表。查找文件后缀是log的三天前的文件并删除写一个脚本将目录下大于100kb的文件移动到/tmp下用sed修改文件mailbox.txt的20行的zhango为wang正则表达式，IP地址的匹配，写一下你怎么检查一个文本文件中某一行的长度？join,cut,">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-level2-linux" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      java中级：linux
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2015/12/01/level2-linux/" class="article-date"><time datetime="2015-12-01T04:05:14.000Z" itemprop="datePublished">2015-12-01</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/中级/">中级</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#如何查看一个文件中的第m到第n行"><span class="toc-number">1.</span> <span class="toc-text">如何查看一个文件中的第m到第n行?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#一个文件每行以逗号分隔，如何打印出用逗号分割后字段为10的行"><span class="toc-number">2.</span> <span class="toc-text">一个文件每行以逗号分隔，如何打印出用逗号分割后字段为10的行?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#分析apache日志，给出当日访问ip的降序列表。"><span class="toc-number">3.</span> <span class="toc-text">分析apache日志，给出当日访问ip的降序列表。</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#查找文件后缀是log的三天前的文件并删除"><span class="toc-number">4.</span> <span class="toc-text">查找文件后缀是log的三天前的文件并删除</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#写一个脚本将目录下大于100kb的文件移动到-tmp下"><span class="toc-number">5.</span> <span class="toc-text">写一个脚本将目录下大于100kb的文件移动到/tmp下</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#用sed修改文件mailbox-txt的20行的zhango为wang"><span class="toc-number">6.</span> <span class="toc-text">用sed修改文件mailbox.txt的20行的zhango为wang</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#正则表达式，IP地址的匹配，写一下"><span class="toc-number">7.</span> <span class="toc-text">正则表达式，IP地址的匹配，写一下</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#你怎么检查一个文本文件中某一行的长度？"><span class="toc-number">8.</span> <span class="toc-text">你怎么检查一个文本文件中某一行的长度？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#join-cut-awk定义分隔符的参数分别是什么"><span class="toc-number">9.</span> <span class="toc-text">join,cut,awk定义分隔符的参数分别是什么</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#怎么查看某个文件是否包含关键字，并打印出前后10行"><span class="toc-number">10.</span> <span class="toc-text">怎么查看某个文件是否包含关键字，并打印出前后10行</span></a></li></ol>
+        <h3 id="如何查看一个文件中的第m到第n行"><a href="#如何查看一个文件中的第m到第n行" class="headerlink" title="如何查看一个文件中的第m到第n行?"></a>如何查看一个文件中的第m到第n行?</h3><h3 id="一个文件每行以逗号分隔，如何打印出用逗号分割后字段为10的行"><a href="#一个文件每行以逗号分隔，如何打印出用逗号分割后字段为10的行" class="headerlink" title="一个文件每行以逗号分隔，如何打印出用逗号分割后字段为10的行?"></a>一个文件每行以逗号分隔，如何打印出用逗号分割后字段为10的行?</h3><h3 id="分析apache日志，给出当日访问ip的降序列表。"><a href="#分析apache日志，给出当日访问ip的降序列表。" class="headerlink" title="分析apache日志，给出当日访问ip的降序列表。"></a>分析apache日志，给出当日访问ip的降序列表。</h3><h3 id="查找文件后缀是log的三天前的文件并删除"><a href="#查找文件后缀是log的三天前的文件并删除" class="headerlink" title="查找文件后缀是log的三天前的文件并删除"></a>查找文件后缀是log的三天前的文件并删除</h3><h3 id="写一个脚本将目录下大于100kb的文件移动到-tmp下"><a href="#写一个脚本将目录下大于100kb的文件移动到-tmp下" class="headerlink" title="写一个脚本将目录下大于100kb的文件移动到/tmp下"></a>写一个脚本将目录下大于100kb的文件移动到/tmp下</h3><h3 id="用sed修改文件mailbox-txt的20行的zhango为wang"><a href="#用sed修改文件mailbox-txt的20行的zhango为wang" class="headerlink" title="用sed修改文件mailbox.txt的20行的zhango为wang"></a>用sed修改文件mailbox.txt的20行的zhango为wang</h3><h3 id="正则表达式，IP地址的匹配，写一下"><a href="#正则表达式，IP地址的匹配，写一下" class="headerlink" title="正则表达式，IP地址的匹配，写一下"></a>正则表达式，IP地址的匹配，写一下</h3><h3 id="你怎么检查一个文本文件中某一行的长度？"><a href="#你怎么检查一个文本文件中某一行的长度？" class="headerlink" title="你怎么检查一个文本文件中某一行的长度？"></a>你怎么检查一个文本文件中某一行的长度？</h3><h3 id="join-cut-awk定义分隔符的参数分别是什么"><a href="#join-cut-awk定义分隔符的参数分别是什么" class="headerlink" title="join,cut,awk定义分隔符的参数分别是什么"></a>join,cut,awk定义分隔符的参数分别是什么</h3><h3 id="怎么查看某个文件是否包含关键字，并打印出前后10行"><a href="#怎么查看某个文件是否包含关键字，并打印出前后10行" class="headerlink" title="怎么查看某个文件是否包含关键字，并打印出前后10行"></a>怎么查看某个文件是否包含关键字，并打印出前后10行</h3>
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2015/12/01/level2-io/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">java中级：io</span>
+    </a>
+  </li>
+  
+  
+  <li role="presentation">
+    <a href="/2015/12/01/level2-other/" id="article-nav-newer" class="article-nav-link-wrap">
+      <span class="article-nav-link-title">java中级：其他</span>
+      <i class="fa fa-chevron-right pull-right"></i>
+    </a>
+  </li>
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2015/12/01/level2-linux/" data-title="java中级：linux" data-url="http://java.jr-jr.com/2015/12/01/level2-linux/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

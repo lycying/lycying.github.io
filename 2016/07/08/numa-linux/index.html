@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>(资源)SWAP的罪与罚 | Java面试指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="说个案例：一台Apache服务器，由于其MaxClients参数设置过大，并且恰好又碰到访问量激增，结果内存被耗光，从而引发SWAP，进而负载攀升，最终导致宕机。正所谓：SWAP，性能之大事，死生之地，存亡之道，不可不察也。 哪些工具可以监测SWAP最容易想到的就是free命令了，它指明了当前SWAP的使用情况：123shell&amp;gt; free -m             total">
+<meta name="keywords" content="linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="(资源)SWAP的罪与罚">
+<meta property="og:url" content="http://java.jr-jr.com/2016/07/08/numa-linux/index.html">
+<meta property="og:site_name" content="Java面试指南">
+<meta property="og:description" content="说个案例：一台Apache服务器，由于其MaxClients参数设置过大，并且恰好又碰到访问量激增，结果内存被耗光，从而引发SWAP，进而负载攀升，最终导致宕机。正所谓：SWAP，性能之大事，死生之地，存亡之道，不可不察也。 哪些工具可以监测SWAP最容易想到的就是free命令了，它指明了当前SWAP的使用情况：123shell&amp;gt; free -m             total">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-06T08:31:42.882Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="(资源)SWAP的罪与罚">
+<meta name="twitter:description" content="说个案例：一台Apache服务器，由于其MaxClients参数设置过大，并且恰好又碰到访问量激增，结果内存被耗光，从而引发SWAP，进而负载攀升，最终导致宕机。正所谓：SWAP，性能之大事，死生之地，存亡之道，不可不察也。 哪些工具可以监测SWAP最容易想到的就是free命令了，它指明了当前SWAP的使用情况：123shell&amp;gt; free -m             total">
+  
+    <link rel="alternate" href="/atom.xml" title="Java面试指南" type="application/atom+xml">
+  
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+
+  <link rel="stylesheet" href="/css/styles.css">
+  
+
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-menu-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="main-menu-navbar">
+      <ul class="nav navbar-nav">
+        
+          <li><a class=""
+                 href="/index.html">首页</a></li>
+        
+          <li><a class=""
+                 href="/categories/初级/">初级</a></li>
+        
+          <li><a class=""
+                 href="/categories/中级/">中级</a></li>
+        
+          <li><a class=""
+                 href="/categories/高级/">高级</a></li>
+        
+          <li><a class=""
+                 href="https://github.com/lycying">Github</a></li>
+        
+      </ul>
+
+      <!--
+      <ul class="nav navbar-nav navbar-right">
+        
+          <li><a href="/atom.xml" title="RSS Feed"><i class="fa fa-rss"></i></a></li>
+        
+      </ul>
+      -->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+  <div class="container">
+    <div class="blog-header">
+  <a href="/"><img src="/logo.png" width="250px"/>
+</div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+          <article id="post-numa-linux" class="article article-type-post" itemscope itemprop="blogPost">
+
+  <header class="article-header">
+    
+  
+    <h2 class="article-title" itemprop="name">
+      (资源)SWAP的罪与罚
+    </h2>
+  
+
+
+  </header>
+
+  <div class="article-meta">
+    <div class="article-datetime">
+  <a href="/2016/07/08/numa-linux/" class="article-date"><time datetime="2016-07-08T06:24:10.000Z" itemprop="datePublished">2016-07-08</time></a>
+</div>
+
+    
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/linux/">linux</a>
+  </div>
+
+
+  </div>
+  <div class="article-inner">
+    <div class="article-entry" itemprop="articleBody">
+    更多请关注 >> <a href="http://java.jr-jr.com">http://java.jr-jr.com</a>
+      
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#哪些工具可以监测SWAP"><span class="toc-number">1.</span> <span class="toc-text">哪些工具可以监测SWAP</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#哪些因素可能影响SWAP"><span class="toc-number">2.</span> <span class="toc-text">哪些因素可能影响SWAP</span></a></li></ol>
+        <p>说个案例：一台Apache服务器，由于其MaxClients参数设置过大，并且恰好又碰到访问量激增，结果内存被耗光，从而引发SWAP，进而负载攀升，最终导致宕机。<br>正所谓：SWAP，性能之大事，死生之地，存亡之道，不可不察也。</p>
+<h2 id="哪些工具可以监测SWAP"><a href="#哪些工具可以监测SWAP" class="headerlink" title="哪些工具可以监测SWAP"></a>哪些工具可以监测SWAP</h2><p>最容易想到的就是free命令了，它指明了当前SWAP的使用情况：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">shell&gt; free -m</span><br><span class="line">             total       used       free</span><br><span class="line">Swap:        34175      11374      22801</span><br></pre></td></tr></table></figure></p>
+<p>另一个常用的是sar命令，它能列出系统在各个时间的SWAP使用情况：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">shell&gt; sar -r</span><br><span class="line">kbswpfree kbswpused  %swpused  kbswpcad</span><br><span class="line"> 23345644  11650572     33.29   4656908</span><br><span class="line"> 23346452  11649764     33.29   4656216</span><br><span class="line"> 23346556  11649660     33.29   4650308</span><br><span class="line"> 23346932  11649284     33.29   4649888</span><br><span class="line"> 23346992  11649224     33.29   4648848</span><br></pre></td></tr></table></figure></p>
+<p>不过free命令和sar命令显示的都不是实时数据，如果需要，可以使用vmstat命令：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">shell&gt; vmstat 1</span><br><span class="line">-----------memory------------- ---swap--</span><br><span class="line">  swpd   free   buff   cache     si   so</span><br><span class="line">11647532 123664 305064 7193168    0    0</span><br><span class="line">11647532 123672 305064 7193172    0    0</span><br><span class="line">11647532 125728 305064 7193468    0    0</span><br><span class="line">11647532 125376 305064 7193476    0    0</span><br><span class="line">11647532 124508 305068 7193624    0    0</span><br></pre></td></tr></table></figure></p>
+<p>每秒刷新一次结果，在SWAP一栏里列出了相关数据，至于si和so的解释，大致如下：</p>
+<ul>
+<li>si: Amount of memory swapped in from disk (/s).</li>
+<li>so: Amount of memory swapped to disk (/s).</li>
+</ul>
+<p>如果它们一直是零当然最好不过了，偶尔不为零也没啥，糟糕的是一直不为零。<br>前面介绍的方法，看到的都是SWAP的整体情况，可是如果我想查看到底是哪些进程使用了SWAP，应该如何操作呢？这个问题有点棘手，我们来研究一下：<br>好消息是top命令能提供这个信息，不过缺省并没有显示，我们需要激活一下：</p>
+<ul>
+<li>打开top；</li>
+<li>按「f」进入选择字段的界面；</li>
+<li>按「p」选择「SWAP」字段；</li>
+<li>按回车确认。</li>
+</ul>
+<p>坏消息是top命令提供的SWAP信息只是一个理论值，或者更直白一点儿来说它根本就是不可信的（在top里SWAP的计算公式是：SWAP=VIRT-RES）。<br>BTW：相比之下，top里的「nFLT」字段更有价值，它表示PageFault的次数。<br>那到底我们能不能获取到进程的SWAP情况呢？别着急，看代码：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">cd</span> /proc</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> pid <span class="keyword">in</span> [0-9]*; <span class="keyword">do</span></span><br><span class="line">    <span class="built_in">command</span>=$(cat /proc/<span class="variable">$pid</span>/cmdline)</span><br><span class="line"></span><br><span class="line">    swap=$(</span><br><span class="line">        awk <span class="string">'</span></span><br><span class="line"><span class="string">            BEGIN  &#123; total = 0 &#125;</span></span><br><span class="line"><span class="string">            /Swap/ &#123; total += $2 &#125;</span></span><br><span class="line"><span class="string">            END    &#123; print total &#125;</span></span><br><span class="line"><span class="string">        '</span> /proc/<span class="variable">$pid</span>/smaps</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (( <span class="variable">$swap</span> &gt; 0 )); <span class="keyword">then</span></span><br><span class="line">        <span class="keyword">if</span> [[ <span class="string">"<span class="variable">$&#123;head&#125;</span>"</span> != <span class="string">"yes"</span> ]]; <span class="keyword">then</span></span><br><span class="line">            <span class="built_in">echo</span> -e <span class="string">"PID\tSWAP\tCOMMAND"</span></span><br><span class="line">            head=<span class="string">"yes"</span></span><br><span class="line">        <span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line">        <span class="built_in">echo</span> -e <span class="string">"<span class="variable">$&#123;pid&#125;</span>\t<span class="variable">$&#123;swap&#125;</span>\t<span class="variable">$&#123;command&#125;</span>"</span></span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line"><span class="keyword">done</span></span><br></pre></td></tr></table></figure></p>
+<p>说明：请使用root权限来运行此脚本。</p>
+<h2 id="哪些因素可能影响SWAP"><a href="#哪些因素可能影响SWAP" class="headerlink" title="哪些因素可能影响SWAP"></a>哪些因素可能影响SWAP</h2><p>内存不足无疑会SWAP，但有些时候，即便看上去内存很充裕，还可能会SWAP，这种现象被称为SWAP Insanity，罪魁祸首主要有以下几点：</p>
+<p>Swappiness的迷失</p>
+<p>实际上，当可用内存不足时，系统有两个选择：一个是通过SWAP来释放内存，另一个是删除Cache中的Page来释放内存。一个很常见的例子是：当拷贝大文件的时候，时常会发生SWAP现象。这是因为拷贝文件的时候，系统会把文件内容在Cache中按Page来缓存，此时一旦可用内存不足，系统便会倾向于通过SWAP来释放内存。</p>
+<p>内核中的swappiness参数可以用来控制这种行为，缺省情况下，swappiness的值是60：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">shell&gt; sysctl -a | grep swappiness</span><br><span class="line">vm.swappiness = 60</span><br></pre></td></tr></table></figure>
+<p>它的含义是：如果系统需要内存，有百分之六十的概率执行SWAP。知道了这一点，我们很自然的会想到用下面的方法来降低执行SWAP的概率：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">shell&gt; <span class="built_in">echo</span> <span class="string">"vm.swappiness = 1"</span> &gt;&gt; /etc/sysctl.conf</span><br><span class="line">shell&gt; sysctl -p</span><br><span class="line">这样做的确可以降低执行SWAP的概率，但并不意味着永远不会执行SWAP。据网友报道某些情况下，直接改为0有可能出现灵异问题，所以建议改为1。</span><br></pre></td></tr></table></figure></p>
+<p>NUMA的诅咒</p>
+<p>NUMA在MySQL社区有很多讨论，这里不多说了，直击NUMA和SWAP的恩怨纠葛。</p>
+<p>大概了解一下NUMA最核心的numactl命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">shell&gt; numactl --hardware</span><br><span class="line">available: 2 nodes (0-1)</span><br><span class="line">node 0 size: 16131 MB</span><br><span class="line">node 0 free: 100 MB</span><br><span class="line">node 1 size: 16160 MB</span><br><span class="line">node 1 free: 10 MB</span><br><span class="line">node distances:</span><br><span class="line">node   0   1</span><br><span class="line">  0:  10  20</span><br><span class="line">  1:  20  10</span><br></pre></td></tr></table></figure>
+<p>可以看到系统有两个节点（其实就是两个物理CPU），它们各自分了16G内存，其中零号节点还剩100M内存，一号节点还剩10M内存。设想启动了一个需要11M内存的进程，系统把它分给了一号节点来执行，此时虽然系统总体的可用内存大于该进程需要的内存，但因为一号节点本身剩余的可用内存不足，所以仍然可能会触发SWAP行为。</p>
+<p>需要说明的一点事，numactl命令中看到的各节点剩余内存中时不包括Cache内存的，如果需要知道，我们可以利用drop_caches参数先释放它：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">shell&gt; sysctl vm.drop_caches=1</span><br><span class="line">注：这步操作可能会引起系统负载的震荡。</span><br></pre></td></tr></table></figure>
+<p>另：如何确定一个进程的节点及内存分配情况？网络上有现成的脚本。<br><a href="https://raw.githubusercontent.com/jeremycole/blog-files/master/numa-maps-summary.pl" target="_blank" rel="noopener">https://raw.githubusercontent.com/jeremycole/blog-files/master/numa-maps-summary.pl</a></p>
+<p>如果要规避NUMA对SWAP的影响，最简单的方法就是在启动进程的时候禁用它：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">shell&gt; numactl --interleave=all ...</span><br></pre></td></tr></table></figure>
+<p>此外，内核参数zone_reclaim_mode通常也很重要，当某个节点可用内存不足时，如果为0的话，那么系统会倾向于从远程节点分配内存；如果为1的话，那么系统会倾向于从本地节点回收Cache内存。多数时候，Cache对性能很重要，所以0是一个更好的选择。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">shell&gt; <span class="built_in">echo</span> <span class="string">"vm.zone_reclaim_mode = 0"</span> &gt;&gt; /etc/sysctl.conf</span><br><span class="line">shell&gt; sysctl -p</span><br></pre></td></tr></table></figure>
+<p>早些年，YouTube曾经被SWAP问题困扰过，他们当时的解决方法很极端：删除SWAP！不得不说这真是艺高人胆大，可惜对芸芸众生的我们而言，这实在是太危险了，因为如此一来，一旦内存耗尽，由于没有SWAP的缓冲，系统会立即开始OOM，结果可能会让问题变得更加复杂，所以大家还是安分守己做个老实人吧。</p>
+
+      
+    </div>
+
+    
+      
+
+    
+
+
+  <center>
+      <hr/>
+    扫描下面的二维码,加入微信公众号,得到最新的资料:
+    <br/>
+    <img src="/weixin.jpg"  width="256px" />
+  </center>
+  <footer class="article-footer">
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/linux/">linux</a></li></ul>
+
+
+  </footer>
+  </div>
+  
+    
+<ul id="article-nav" class="nav nav-pills nav-justified">
+  
+  <li role="presentation">
+    <a href="/2016/07/03/linux-cache-free/" id="article-nav-older" class="article-nav-link-wrap">
+      <i class="fa fa-chevron-left pull-left"></i>
+      <span class="article-nav-link-title">(转)手动释放linux内存cache和脚本定时释放</span>
+    </a>
+  </li>
+  
+  
+</ul>
+
+
+  
+</article>
+<div class="ds-thread" data-thread-key="2016/07/08/numa-linux/" data-title="(资源)SWAP的罪与罚" data-url="http://java.jr-jr.com/2016/07/08/numa-linux/"></div>
+
+<script type="text/javascript">
+      var duoshuoQuery = {short_name:"java-jr-jr-com"};
+      	(function() {
+      		var ds = document.createElement('script');
+      		ds.type = 'text/javascript';ds.async = true;
+      		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      		ds.charset = 'UTF-8';
+      		(document.getElementsByTagName('head')[0]
+      		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+      	})();
+</script>
+
+
+        </div>
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+          
+  <script src="/js/snap.svg-min.js"></script>
+<style>
+.grid {
+	max-width: 1000px;
+	width: 90%;
+}
+.grid a {
+	float: left;
+	max-width: 250px;
+	color: yellow;
+}
+.grid figure {
+	position: relative;
+	overflow: hidden;
+	background: #333;
+}
+.grid figure img {
+	position: relative;
+	display: block;
+	width: 100%;
+	opacity: 0.7;
+	-webkit-transition: opacity 0.3s;
+	transition: opacity 0.3s;
+}
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	z-index: 11;
+	padding: 10px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+.grid figcaption h2 {
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-weight: 300;
+	font-size: 130%;
+	-webkit-transition: -webkit-transform 0.3s;
+	transition: transform 0.3s;
+}
+.grid figcaption p {
+	padding: 0 20px;
+	color: #aaa;
+	font-weight: 300;
+	-webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+	transition: opacity 0.3s, transform 0.3s;
+}
+.grid figcaption h2,
+.grid figcaption p {
+	-webkit-transform: translateY(50px);
+	transform: translateY(50px);
+  color: #fff;
+}
+.grid figcaption,
+.grid figcaption h2,
+.grid figcaption p,
+.grid figure button {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.grid svg {
+	position: absolute;
+	top: -1px; /* fixes rendering issue in FF */
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+}
+.grid svg path {
+	fill:#CC99CC;
+}
+.grid a:hover figure img {
+	opacity: 1;
+}
+.grid a:hover figcaption h2,
+.grid a:hover figcaption p {
+	-webkit-transform: translateY(0);
+	transform: translateY(0);
+}
+.grid a:hover figcaption p {
+	opacity: 0;
+}
+</style>
+
+<div style="margin-top:0px;">
+<section id="grid" class="grid clearfix">
+				<a href="/2015/11/30/getstart/" data-path-hover="m 0,0 0,47.7775 c 24.580441,3.12569 55.897012,-8.199417 90,-8.199417 34.10299,0 65.41956,11.325107 90,8.199417 L 180,0 z">
+					<figure>
+						<img src="/3.png" />
+						<svg viewBox="0 0 180 320" preserveAspectRatio="none"><path d="m 0,0 0,171.14385 c 24.580441,15.47138 55.897012,24.75772 90,24.75772 34.10299,0 65.41956,-9.28634 90,-24.75772 L 180,0 0,0 z"/></svg>
+						<figcaption>
+							<p>点击查看写这一系列的目的</p>
+						</figcaption>
+					</figure>
+				</a>
+</section>
+</div>
+<script>
+			(function() {
+
+				function init() {
+					var speed = 330,
+						easing = mina.backout;
+
+					[].slice.call ( document.querySelectorAll( '#grid > a' ) ).forEach( function( el ) {
+						var s = Snap( el.querySelector( 'svg' ) ), path = s.select( 'path' ),
+							pathConfig = {
+								from : path.attr( 'd' ),
+								to : el.getAttribute( 'data-path-hover' )
+							};
+
+						el.addEventListener( 'mouseenter', function() {
+							path.animate( { 'path' : pathConfig.to }, speed, easing );
+						} );
+
+						el.addEventListener( 'mouseleave', function() {
+							path.animate( { 'path' : pathConfig.from }, speed, easing );
+						} );
+					} );
+				}
+
+				init();
+
+			})();
+		</script>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Categories</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/linux/">linux</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/中级/">中级</a><span class="sidebar-module-list-count">19</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/初级/">初级</a><span class="sidebar-module-list-count">13</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/categories/高级/">高级</a><span class="sidebar-module-list-count">12</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Tag Cloud</h4>
+    <p class="tagcloud">
+      <a href="/tags/arch/" style="font-size: 10px;">arch</a> <a href="/tags/arithmetic/" style="font-size: 10px;">arithmetic</a> <a href="/tags/cache/" style="font-size: 10px;">cache</a> <a href="/tags/collections/" style="font-size: 10px;">collections</a> <a href="/tags/io/" style="font-size: 10px;">io</a> <a href="/tags/jvm/" style="font-size: 10px;">jvm</a> <a href="/tags/linux/" style="font-size: 18px;">linux</a> <a href="/tags/net/" style="font-size: 14px;">net</a> <a href="/tags/nosql/" style="font-size: 10px;">nosql</a> <a href="/tags/object/" style="font-size: 16px;">object</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/shell/" style="font-size: 14px;">shell</a> <a href="/tags/thread/" style="font-size: 20px;">thread</a> <a href="/tags/tools/" style="font-size: 12px;">tools</a>
+    </p>
+  </div>
+
+
+  
+  <div class="sidebar-module">
+    <h4>Archives</h4>
+    <ul class="sidebar-module-list"><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/07/">七月 2016</a><span class="sidebar-module-list-count">5</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/06/">六月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/05/">五月 2016</a><span class="sidebar-module-list-count">1</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2016/04/">四月 2016</a><span class="sidebar-module-list-count">2</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/12/">十二月 2015</a><span class="sidebar-module-list-count">36</span></li><li class="sidebar-module-list-item"><a class="sidebar-module-list-link" href="/archives/2015/11/">十一月 2015</a><span class="sidebar-module-list-count">1</span></li></ul>
+  </div>
+
+
+
+  
+  <div class="sidebar-module">
+    <h4>Recents</h4>
+    <ul class="sidebar-module-list">
+      
+        <li>
+          <a href="/2016/07/08/numa-linux/">(资源)SWAP的罪与罚</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/linux-cache-free/">(转)手动释放linux内存cache和脚本定时释放</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/thread-basic/">(转)多线程经典问题</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-bit/">位运算符和位运算(与,或,异或等)的用途</a>
+        </li>
+      
+        <li>
+          <a href="/2016/07/03/java-hashmap-loop/">(转)Java HashMap的死循环</a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+
+        </div>
+    </div>
+  </div>
+  <footer class="blog-footer">
+  <div class="container">
+    <div id="footer-info" class="inner">
+      &copy; 2018 lycying@gmail.com<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+  
+
+<script src="//cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>
